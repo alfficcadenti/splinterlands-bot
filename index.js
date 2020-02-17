@@ -27,6 +27,16 @@ async function makeTeam(page) {
     
 }
 
+async function checkMana(page) {
+    var manaLimit = await page.evaluate(() => {
+        var manaCap = document.querySelectorAll('div.mana-total > span.mana-cap')[0].innerText;
+        var manaUsed = document.querySelectorAll('div.mana-total > span.mana-used')[0].innerText;
+        return [manaCap,manaUsed];
+      });
+    console.log('manaLimit',manaLimit);
+    return manaLimit;
+}
+
 
 async function openSplinter() {
     const browser = await puppeteer.launch({headless: false});
@@ -57,12 +67,7 @@ async function openSplinter() {
     //Make the team
     await page.waitFor(1000);
 
-    var manaLimit = await page.evaluate(() => {
-        var manaCap = document.querySelectorAll('div.mana-total > span.mana-cap')[0].innerText;
-        var manaUsed = document.querySelectorAll('div.mana-total > span.mana-used')[0].innerText;
-        return [manaCap,manaUsed];
-      });
-    console.log('manaLimit',manaLimit);
+    let mana = checkMana(page).then((mana)=>console.log('mana promise', mana));
    
     const LENGTH_SELECTOR_CLASS = 'stat-text-mana';
 
