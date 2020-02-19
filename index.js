@@ -28,13 +28,14 @@ async function makeTeam(page) {
 }
 
 async function checkMana(page) {
-    var manaLimit = await page.evaluate(() => {
+    var manas = await page.evaluate(() => {
         var manaCap = document.querySelectorAll('div.mana-total > span.mana-cap')[0].innerText;
         var manaUsed = document.querySelectorAll('div.mana-total > span.mana-used')[0].innerText;
-        return [manaCap,manaUsed];
+        var manaLeft = manaCap - manaUsed
+        return {manaCap, manaUsed, manaLeft};
       });
-    console.log('manaLimit',manaLimit);
-    return manaLimit;
+    console.log('manaLimit',manas);
+    return manas;
 }
 
 
@@ -42,7 +43,7 @@ async function openSplinter() {
     const browser = await puppeteer.launch({headless: false});
     const page = await browser.newPage();
     await page.setViewport({
-        width: 1000,
+        width: 1500,
         height: 800,
         deviceScaleFactor: 1,
       });
@@ -59,7 +60,7 @@ async function openSplinter() {
     await page.waitForSelector('#btn_make_team')
         .then(() => page.waitFor(1000))
         .then(() => page.click('#btn_make_team'))
-        .then(() => page.waitForSelector('#card_167')
+        .then(() => page.waitForSelector('#card_167') //select 
         .then(() => page.click('#card_167')))
 
     await page.waitFor(1000);
@@ -69,13 +70,11 @@ async function openSplinter() {
 
     let mana = checkMana(page).then((mana)=>console.log('mana promise', mana));
    
-    const LENGTH_SELECTOR_CLASS = 'stat-text-mana';
-
     let listLength = await page.evaluate((sel) => {
             return document.getElementsByClassName(sel).length;
-        }, LENGTH_SELECTOR_CLASS);
+        }, 'stat-text-mana');
 
-    console.log('cardsList',listLength);
+    console.log('cardsListLength',listLength);
 
 
     var cards = await page.evaluate(() => {
@@ -86,6 +85,7 @@ async function openSplinter() {
                 name: manaList[i].querySelectorAll('.card-name-name')[0].innerText,
                 level: manaList[i].querySelectorAll('.card-name-level')[0].innerText,
                 mana: manaList[i].querySelectorAll('.stat-text-mana')[0].innerText,
+                cardId: manaList[i].id,
                 // attack: manaList[i].querySelectorAll('.stat-attack')[0].innerText,
                 // speed: manaList[i].querySelectorAll('.stat-speed')[0].innerText,
                 // health: manaList[i].querySelectorAll('.stat-health')[0].innerText,
@@ -95,25 +95,27 @@ async function openSplinter() {
       });
       console.log('cards',cards);
 
-
-
-    // const getManaCap = await page.$$('div.mana-total > span.mana-cap')
-    // const getManaUsed = await page.$$('div.mana-total > span.mana-used')
-
-    // // const manaCap = await page.evaluate(()=>document.querySelectorAll('span.mana-cap'));
-    // // const manaUsed = await page.evaluate(()=>document.querySelectorAll('span.mana-used'));
-    // console.log('MANA STATS:',getManaCap.innerHTML,getManaUsed.innerHTML);
-    // await page.waitFor(10000);
-    // const text = await page.evaluate(()=>{
-    //     const manas = document.querySelectorAll('div.stat-text-mana')
-    //     console.log('MANAS', manas);
-    //     return manas;
-    // });
-    // console.log(text)
+    mana = checkMana(page).then((mana)=>console.log('mana promise', mana));
+    await page.waitFor(5000).then(
+        ()=>{
+            if (Number(mana.manaCap) > 14) {
+                console.log('14plus')
+                page.click('#card_162')
+                    .then(() => page.waitFor(1000))
+                    .then(() => page.click('#card_196'))
+                    .then(() => page.click('#card_194'));
+                mana = checkMana(page).then((mana)=>console.log('mana promise', mana));
+            } else {
+                page.click('#card_162')
+                .then(() => page.waitFor(1000))
+                .then(() => page.click('#card_196'))
+                .then(() => page.click('#card_194'));
+            }
+        });
 
 
     
-    //deck-builder-page2__cards
+    
     // card id card_167
     
     // battle_container
