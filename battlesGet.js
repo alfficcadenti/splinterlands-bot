@@ -1,4 +1,10 @@
 const fetch = require("node-fetch");
+const fs = require('fs');
+
+
+const distinct = (value, index, self) => {
+    return self.indexOf(value) === index;
+}
 
 async function getBattleHistory(player = '', data = {}) {
     const battleHistory = await fetch('https://api.steemmonsters.io/battle/history?player='+player+'&v=1582143214911&token=5C9VPKBVV4&username=a1492dc')
@@ -48,12 +54,17 @@ const battles = getBattleHistory(player = 'a1492dc')
         }})
     ).then(
         x=> {
+                fs.writeFile("test.json", JSON.stringify(x), function(err) {
+                    if (err) {
+                        console.log(err);
+                    }
+                });
                 x.map(element => 
                     {
                         users.push(element.player_2);
                         users.push(element.player_1);
                     }
                 );
-                console.log(users)
+                console.log(users.filter(distinct))
             }
     )
