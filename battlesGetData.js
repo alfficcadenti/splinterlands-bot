@@ -25,7 +25,10 @@ async function getBattleHistory(player = '', data = {}) {
 
 users = [];
 player = 'a1492dc'
-const battles = getBattleHistory(player)
+
+usersToGrab =  ['aaken','a1492dc','kenchung3','geels','kenchung1','nutus','berindon','funmeko','tomeofsplinters','kenchung7','kenchung6','raferti','pal.aaronli','craftsman252','minnow.helper','xavezar','vyulivsaz','kenchung5']
+usersToGrab.forEach(element => {
+    getBattleHistory(element)
     .then(battles => battles.map(
         x => {
             const details = JSON.parse(x.details);
@@ -71,7 +74,7 @@ const battles = getBattleHistory(player)
                         monster_6_level: monster6 ? monster6.level : '',
                         monster_6_abilities: monster6 ? monster6.abilities : ''
                     }
-                } else {
+                } else if (x.winner == x.player_2) {
                     const monster1 = JSON.parse(x.details).team2.monsters[0];
                     const monster2 = JSON.parse(x.details).team2.monsters[1];
                     const monster3 = JSON.parse(x.details).team2.monsters[2];
@@ -113,25 +116,23 @@ const battles = getBattleHistory(player)
                         monster_6_level: monster6 ? monster6.level : '',
                         monster_6_abilities: monster6 ? monster6.abilities : ''
                     }
-            }
-            
-
-            }
+            }}
 
         })
     ).then(
-        x=> { console.log(x)
-                fs.writeFile(`data/${player}.json`, JSON.stringify(x), function(err) {
+        x=> {
+                fs.writeFile(`data/${element}.json`, JSON.stringify(x), function(err) {
                     if (err) {
                         console.log(err);
                     }
                 });
-                // x.map(element => 
-                //     {
-                //         users.push(element.player_2);
-                //         users.push(element.player_1);
-                //     }
-                // );
-                // console.log(users.filter(distinct))
+                x.map(element => 
+                    {
+                        console.log('elem',element)
+                        element && element.player_name ? users.push(element.player_name) : null;
+                    }
+                );
+                console.log(users.filter(distinct))
             }
     )
+});
