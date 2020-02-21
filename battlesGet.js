@@ -55,7 +55,7 @@ const battles = getBattleHistory(player)
         }})
     ).then(
         x=> {
-                fs.writeFile(`data/${player}.json`, JSON.stringify(x), function(err) {
+                fs.writeFile(`data/${player}_Raw.json`, JSON.stringify(x), function(err) {
                     if (err) {
                         console.log(err);
                     }
