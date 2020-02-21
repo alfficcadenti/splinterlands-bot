@@ -99,28 +99,14 @@ const battles = usersToGrab.map(user =>
                     }}
 
             })
-        ).then(x => battlesList.push(x))
+        ).then(x => battlesList = [...battlesList, ...x])
 )
 
 Promise.all(battles).then(() => {
-    console.log(battles)
-    fs.writeFile(`data/history.json`, JSON.stringify(battlesList), function(err) {
+    const cleanBattleList = battlesList.filter(x => x != undefined)
+    fs.writeFile(`data/history.json`, JSON.stringify(cleanBattleList), function(err) {
         if (err) {
             console.log(err);
         }
     });
   });
-
-
-// fs.writeFile(`data/history.json`, JSON.stringify(battlesList), function(err) {
-//                 if (err) {
-//                     console.log(err);
-//                 }
-//             });
-            // //print all the winners
-            // x.map(element => 
-            //     {
-            //         element && element.winner ? users.push(element.winner) : null;
-            //     }
-            // );
-            // console.log(users.filter(distinct))
