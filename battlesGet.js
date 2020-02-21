@@ -23,8 +23,9 @@ async function getBattleHistory(player = '', data = {}) {
     return battleHistory.battles;
 }
 
-users = []
-const battles = getBattleHistory(player = 'a1492dc')
+users = [];
+player = 'a1492dc'
+const battles = getBattleHistory(player)
     .then(battles => battles.map(
         x => {
             const details = JSON.parse(x.details);
@@ -54,7 +55,7 @@ const battles = getBattleHistory(player = 'a1492dc')
         }})
     ).then(
         x=> {
-                fs.writeFile("test.json", JSON.stringify(x), function(err) {
+                fs.writeFile(`${player}.json`, JSON.stringify(x), function(err) {
                     if (err) {
                         console.log(err);
                     }
