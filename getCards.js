@@ -1,5 +1,5 @@
+'use strict';
 const fetch = require("node-fetch");
-const fs = require('fs');
 
 async function getCards() {
     return await fetch("https://game-api.splinterlands.io/cards/get_details?v=1582322601277", {"credentials":"omit","headers":{"accept":"application/json, text/javascript, */*; q=0.01","accept-language":"en-GB,en-US;q=0.9,en;q=0.8"},"referrer":"https://splinterlands.io/?p=collection&a=a1492dc","referrerPolicy":"no-referrer-when-downgrade","body":null,"method":"GET","mode":"cors"})

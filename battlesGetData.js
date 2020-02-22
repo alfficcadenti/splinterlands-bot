@@ -66,7 +66,7 @@ const extractMonster = (team) => {
 let users = [];
 let battlesList = [];
 //usersToGrab =  ['aaken','a1492dc','kenchung3','geels','kenchung1','nutus','berindon','funmeko','tomeofsplinters','kenchung7','kenchung6','raferti','pal.aaronli','craftsman252','minnow.helper','xavezar','vyulivsaz','kenchung5']
-usersToGrab =  ['aaken','a1492dc'];
+usersToGrab =  ['aaken','a1492dc','hellobot','pal.aaronli'];
 const battles = usersToGrab.map(user => 
     getBattleHistory(user)
         .then(battles => battles.map(
