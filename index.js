@@ -13,7 +13,7 @@ async function login(page) {
             .then(() => page.focus('#account'))
             .then(() => page.type('#account', 'a1492dc@gmail.com', {delay: 100}))
             .then(() => page.focus('#key'))
-            .then(() => page.type('#key', 'biomassa', {delay: 100}))
+            .then(() => page.type('#key', '', {delay: 100}))
             .then(() => page.click('#btn_login'))
             .then(() => page.waitFor(2000)
             .then(() => page.waitForSelector('.modal-close-new')))
