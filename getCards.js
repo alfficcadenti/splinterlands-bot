@@ -20,8 +20,11 @@ async function getCards() {
 const cardByIds = (ids = []) => {
     return getCards()
         .then(inventory => inventory.filter(card => ids.includes(card.id))
-            ).then(x=> x.map((y) => [y.id,y.name,y.color]))
-            .then(x=> console.log(x));
+            ).then(x=> x.map((y) => ({
+                'id': y.id,
+                'name': y.name,
+                'color': y.color})
+                )).then(x=> console.log(x));
 }
 
 //example get card id [1,145,167]
