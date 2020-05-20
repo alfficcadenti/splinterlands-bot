@@ -7,18 +7,13 @@ const puppeteer = require('puppeteer');
 
 async function login(page) {
     try {
-        //await page.click('.navbar-toggle.collapsed'); //FIRST STEP NEEDED IF PAGE SIZE TOO SMALL   
-        //await page.waitFor(1000);
-
         page.waitForSelector('#log_in_button > button').then(() => page.click('#log_in_button > button'))
         await page.waitForSelector('#account')
             .then(() => page.waitFor(3000))
             .then(() => page.focus('#account'))
             .then(() => page.type('#account', process.env.ACCOUNT))
-            //.then(() => page.type('#account', 'a1492dc@gmail.com'))
             .then(() => page.focus('#key'))
             .then(() => page.type('#key', process.env.PASSWORD))
-            //.then(() => page.type('#key', 'Ro22adqq!'))
             .then(() => page.click('#btn_login'))
             .then(() => page.waitFor(5000)
                 .then(() => page.waitForSelector('.modal-close-new'))
@@ -31,7 +26,7 @@ async function login(page) {
 }
 
 async function makeTeam(page) {
-
+    //TBD
 }
 
 async function checkMana(page) {
@@ -103,15 +98,12 @@ async function openSplinter() {
 
     await page.waitForSelector('.btn--create-team', { timeout: 90000 })
         //then read rules   
-
         .then(async () => {
             let [rules, mana, splinters] = await Promise.all([
                 checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
                 checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
                 checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
             ]);
-
-            //page.click('#btn_make_team')
             return { rules: rules, mana: mana, splinters: splinters }
         })
         .then((matchDetails) => ask.askFormation(matchDetails))
@@ -148,18 +140,10 @@ async function openSplinter() {
                     .catch(e => console.log('ERROR: ', e))
                 ); return input
         })
-        // .then(() => page.waitForSelector('#card_162') //select 
-        // .then(() => page.click('#card_162')))
         .then(() => page.waitFor(5000))
         .then(() => page.click('.btn-green')[0]) //start fight
-        // .then(() => page.waitFor(30000))
-        // .then(() => page.click('#btnRumble'))
-        // .then(() => page.waitFor(30000))
-        // .then(() => page.click('#btnSkip'))
-        // .then(() => page.waitFor(5000))
         .then(() => page.waitFor(5000))
         .then(() => browser.close())
-
 }
 
 cron.schedule('*/3 * * * *', () => {
