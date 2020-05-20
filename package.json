@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^8.2.0",
+    "node-cron": "^2.0.3",
     "node-fetch": "^2.6.0",
+    "pg": "^8.0.3",
     "puppeteer": "^2.1.1"
   }
 }
