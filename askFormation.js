@@ -1,10 +1,45 @@
 const cards = require('./getCards.js');
 
+const summoners = [{ 224: 'dragon' },
+{ 27: 'earth' },
+{ 16: 'water' },
+{ 156: 'life' },
+{ 189: 'earth' },
+{ 167: 'fire' },
+{ 145: 'death' },
+{ 5: 'fire' },
+{ 71: 'water' },
+{ 114: 'dragon' },
+{ 178: 'water' },
+{ 110: '' },
+{ 49: 'death' },
+{ 88: 'dragon' },
+{ 38: 'white' },
+{ 236: '' },
+{ 74: 'death' },
+{ 200: '' },
+{ 70: '' },
+{ 109: '' },
+{ 111: '' },
+{ 130: '' },
+{ 72: '' },
+{ 112: '' },
+{ 235: '' },
+{ 56: '' },
+{ 113: '' },
+{ 73: 'life' }]
+
+const summonerColor = (id) => {
+    const summonerDetails = summoners.find(x => x[id]);
+    return summonerDetails ? summonerDetails[id] : '';
+}
+
 const history = require("./data/newHistory.json");
 //const myCards = require('./data/myCards.js');
 const myCards = require('./data/splinterlavaCards.js');
 
-let availabilityCheck = (base, toCheck) => toCheck.every(v => base.includes(v));
+
+let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
 
 const battlesFilterByManacap = (mana, ruleset) => history.filter(
     battle =>
@@ -22,7 +57,8 @@ const cardsIds = (mana, ruleset) => battlesFilterByManacap(mana, ruleset)
                 x.monster_3_id,
                 x.monster_4_id,
                 x.monster_5_id,
-                x.monster_6_id
+                x.monster_6_id,
+                summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
             ]
         }
     )
@@ -38,42 +74,12 @@ const askFormation = function (matchDetails) {
     return cardsIds(matchDetails.mana, matchDetails.rules)
         .filter(
             x => availabilityCheck(myCards, x))
-        .map(
-            element => element)//cards.cardByIds(element)
+        .map(element => element)//cards.cardByIds(element)
+
 }
 
 module.exports.askFormation = askFormation;
+// const summoners = history.map(x => x.summoner_id);
 
-
-// console.log(cardsIds(manaCap,'Reverse Spe ed')
-//     .filter(
-//         x=> availabilityCheck(myCards,x))
-//     .map(
-//         element => cards.cardByIds(element)))
-
-
-
-//     ).forEach(
-//         x => inactive.includes(x)))
-
-// }
-
-// const test = [[ { id: 91, name: 'Creeping Ooze', color: 'Gray' },
-// { id: 97, name: 'Goblin Mech', color: 'Gray' },
-// { id: 131, name: 'Furious Chicken', color: 'Gray' },
-// { id: 158, name: 'Serpentine Spy', color: 'Red' },
-// { id: 161, name: 'Fire Elemental', color: 'Red' },
-// { id: 167, name: 'Pyre', color: 'Red' },
-// { id: 194, name: 'Elven Mystic', color: 'Gray' } ],
-// [ { id: 158, name: 'Serpentine Spy', color: 'Red' },
-// { id: 161, name: 'Fire Elemental', color: 'Red' },
-// { id: 162, name: 'Living Lava', color: 'Red' },
-// { id: 167, name: 'Pyre', color: 'Red' },
-// { id: 191, name: 'Horny Toad', color: 'Gray' },
-// { id: 195, name: 'Goblin Chariot', color: 'Gray' } ]]
-
-// console.log('HERE', test.forEach(formation=> console.log(formation)))
-
-// console.log(test.filter(formation=> availabilityCheck(formation,inactive)))
-
-//console.log('here',cardsIds(99).filter(x=> checker(basicCards,x)))
+// // console.log([...new Set(summoners)])
+// console.log(summonerColor(27))

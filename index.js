@@ -16,7 +16,7 @@ async function login(page) {
             .then(() => page.type('#key', process.env.PASSWORD))
             .then(() => page.click('#btn_login'))
             .then(() => page.waitFor(5000)
-                .then(() => page.waitForSelector('.modal-close-new'))
+                .then(() => page.waitForSelector('.modal-close-new', { timeout: 10000 }))
                 .then(() => page.click('.modal-close-new'))
             )
 
@@ -46,28 +46,22 @@ async function checkMatchMana(page) {
 }
 
 async function checkMatchRules(page) {
-    const rules = await page.evaluate(() => {
-        let matchRules = []
-        const rules = document.querySelectorAll('div.current-rules > b');
-        [...rules].forEach((rule) => {
-            matchRules = [...matchRules, rule.innerText]
-        });
-        console.log('OBJ', matchRules)
-        return matchRules.join('|');
-    });
-    return rules;
+    const rules = await page.$$eval("div.col-md-12 > img", el => el.map(x => x.getAttribute("data-original-title")));
+    const ruleNames = rules.map(x => x.split(':')[0])
+    console.log('RULES', rules, ruleNames.join('|'));
+    return ruleNames.join('|');
+}
+
+const splinterIsActive = (splinterUrl) => {
+    const splinter = splinterUrl.split('/').slice(-1)[0].replace('.svg', '').replace('icon_splinter_', '');
+    return splinter.indexOf('inactive') === -1 ? splinter : '';
 }
 
 async function checkMatchActiveSplinters(page) {
-    const splinters = await page.evaluate(() => {
-        let splintersArray = []
-        const splinters = document.querySelectorAll('div.splinter-grid > .splinter > img');
-        [...splinters].forEach((splinter) => {
-            console.log(splinter)
-            splintersArray = [...splintersArray, splinter.data - original - title]
-        });
-        return splintersArray
-    });
+    const splinterUrls = await page.$$eval("div.col-sm-4 > img", el => el.map(x => x.getAttribute("src")));
+    // const splinters = await page.evaluate('document.querySelector("div.combat__splinters > img").getAttribute("data-original-title")');
+    const splinters = splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
+    console.log('SPLINTERS', splinters)
     return splinters;
 }
 
@@ -87,6 +81,9 @@ async function openSplinter() {
     await page.waitFor(4000);
     await login(page);
     await page.waitFor(6000);
+
+    //READ DAILY QUEST span#questDescription
+
     // LAUNCH the battle
     const [button] = await page.$x("//button[contains(., 'RANKED')]");
     button ? await button.click() : null;
@@ -97,7 +94,7 @@ async function openSplinter() {
     await page.waitFor(5000);
 
     await page.waitForSelector('.btn--create-team', { timeout: 90000 })
-        //then read rules   
+        //then read rules and details 
         .then(async () => {
             let [rules, mana, splinters] = await Promise.all([
                 checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
@@ -106,47 +103,57 @@ async function openSplinter() {
             ]);
             return { rules: rules, mana: mana, splinters: splinters }
         })
-        .then((matchDetails) => ask.askFormation(matchDetails))
-        .then((possibleTeams) => {
+        .then((matchDetails) => [ask.askFormation(matchDetails), matchDetails])
+        .then(([possibleTeams, matchDetails]) => {
             if (possibleTeams) {
                 page.click('#btn_make_team');
-                return possibleTeams
+                return [possibleTeams, matchDetails]
             }
             page.click('.btn-red')[0]
         })
-        .then((possibleTeams) => { console.log('possible teams: ', possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return possibleTeams } else { console.log('NO TEAMS') }; })
-        .then((possibleTeams) => {
+        .then(([possibleTeams, matchDetails]) => { console.log('possible teams: ', possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
+        .then(([possibleTeams, matchDetails]) => {
+
+            if (matchDetails.splinters.includes('fire')) {
+                const fireTeam = possibleTeams.find(x => x[7] === 'fire')
+                console.log('GIOCA FIRE: ', fireTeam, matchDetails)
+                const summoner = makeCardId(fireTeam[0].toString()); console.log('summoner: ', summoner); return [summoner, fireTeam];
+            }
+
             let i = 0;
             while (i < possibleTeams.length) {
-                if (possibleTeams[i][0] !== 224) {
-                    const summoner = makeCardId(possibleTeams[i][0].toString()); console.log('summoner: ', summoner); return { summoner, possibleTeams }
+                if (possibleTeams[i][7] !== 'dragon' && matchDetails.splinters.includes(possibleTeams[i][7])) {
+                    console.log('PRESA: ', possibleTeams[i], matchDetails)
+                    const summoner = makeCardId(possibleTeams[i][0].toString()); console.log('summoner: ', summoner); return [summoner, possibleTeams[i]]
                 }
+                console.log('SCARTATA: ', possibleTeams[i])
                 i++;
             }
         }) //select 
-        .then(input => {
-            page.waitForSelector(input.summoner)
-                .then(() => page.click(input.summoner)
+        .then(([summoner, team]) => {
+            page.waitForSelector(summoner)
+                .then(() => page.click(summoner)
                     .then(() => {
-                        page.waitForSelector(makeCardId(input.possibleTeams[0][1].toString()))
-                            .then(() => page.click(makeCardId(input.possibleTeams[0][1].toString())))
-                            .then(() => input.possibleTeams[0][2] ? page.click(makeCardId(input.possibleTeams[0][2].toString())) : console.log('nocard 2'))
-                            .then(() => input.possibleTeams[0][3] ? page.click(makeCardId(input.possibleTeams[0][3].toString())) : console.log('nocard 3'))
-                            .then(() => input.possibleTeams[0][4] ? page.click(makeCardId(input.possibleTeams[0][4].toString())) : console.log('nocard 4'))
-                            .then(() => input.possibleTeams[0][5] ? page.click(makeCardId(input.possibleTeams[0][5].toString())) : console.log('nocard 5'))
-                            .then(() => input.possibleTeams[0][6] ? page.click(makeCardId(input.possibleTeams[0][6].toString())) : console.log('nocard 6'))
-                        console.log('team:', input)
+                        page.waitForSelector(makeCardId(team[1].toString()))
+                            .then(() => page.click(makeCardId(team[1].toString())))
+                            .then(() => team[2] ? page.click(makeCardId(team[2].toString())) : console.log('nocard 2'))
+                            .then(() => team[3] ? page.click(makeCardId(team[3].toString())) : console.log('nocard 3'))
+                            .then(() => team[4] ? page.click(makeCardId(team[4].toString())) : console.log('nocard 4'))
+                            .then(() => team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5'))
+                            .then(() => team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6'))
+                        console.log('team:', team)
                     })
                     .catch(e => console.log('ERROR: ', e))
-                ); return input
+                ); return team
         })
         .then(() => page.waitFor(5000))
         .then(() => page.click('.btn-green')[0]) //start fight
         .then(() => page.waitFor(5000))
         .then(() => browser.close())
+        .catch((e) => { console.log('Error: ', e); browser.close() })
 }
 
-cron.schedule('*/3 * * * *', () => {
+cron.schedule('*/4 * * * *', () => {
     try {
         openSplinter();
     }
@@ -155,3 +162,4 @@ cron.schedule('*/3 * * * *', () => {
     }
 });
 
+// openSplinter();
