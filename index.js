@@ -106,18 +106,20 @@ async function openSplinter() {
         .then((matchDetails) => [ask.askFormation(matchDetails), matchDetails])
         .then(([possibleTeams, matchDetails]) => {
             if (possibleTeams) {
-                page.click('#btn_make_team');
+                page.click('.btn--create-team')[0];
                 return [possibleTeams, matchDetails]
             }
-            page.click('.btn-red')[0]
+            page.click('.btn--surrender')[0]
         })
         .then(([possibleTeams, matchDetails]) => { console.log('possible teams: ', possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
-            if (matchDetails.splinters.includes('fire')) {
+            if (matchDetails.splinters.includes('fire' && possibleTeams.find(x => x[7] === 'fire'))) {
                 const fireTeam = possibleTeams.find(x => x[7] === 'fire')
                 console.log('GIOCA FIRE: ', fireTeam, matchDetails)
-                const summoner = makeCardId(fireTeam[0].toString()); console.log('summoner: ', summoner); return [summoner, fireTeam];
+                const summoner = makeCardId(fireTeam[0].toString());
+                console.log('summoner: ', summoner);
+                return [summoner, fireTeam];
             }
 
             let i = 0;
