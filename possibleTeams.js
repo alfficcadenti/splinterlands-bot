@@ -36,7 +36,13 @@ const summonerColor = (id) => {
 
 const history = require("./data/newHistory.json");
 //const myCards = require('./data/myCards.js');
-const myCards = require('./data/splinterlavaCards.js');
+const basicCards = require('./data/splinterlavaCards.js');
+const getCards = require('./data/advancedCards');
+
+async function myCards() {
+    const advanced = await getCards.getAdvancedCards('splinterlava');
+    return basicCards.concat(advanced);
+}
 
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
@@ -71,7 +77,8 @@ const cardsIds = (mana, ruleset, splinters) => battlesFilterByManacap(mana, rule
 // const manaCap = 22;
 // const inactive = ['White']
 
-const askFormation = function (matchDetails) {
+const askFormation = async function (matchDetails) {
+    const myCards = await myCards()
     return cardsIds(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
         .filter(
             x => availabilityCheck(myCards, x))
@@ -98,5 +105,5 @@ module.exports.possibleTeams = possibleTeams;
 // console.log(summonerColor(27))
 
 // // TO TEST uncomment below:
-// const matchDetails = { mana: 16, rules: 'Standard' }
+// const matchDetails = { mana: 11, rules: 'Standard' }
 // console.log(possibleTeams(matchDetails))

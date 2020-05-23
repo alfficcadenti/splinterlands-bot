@@ -112,9 +112,9 @@ async function openSplinter() {
         .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
-            if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
-                const fireTeam = possibleTeams.find(x => x[7] === 'fire')
-                console.log('PLAY FIRE: ', fireTeam, matchDetails)
+            if (matchDetails.splinters.includes('water') && possibleTeams.find(x => x[7] === 'water')) {
+                const fireTeam = possibleTeams.find(x => x[7] === 'water')
+                console.log('PLAY WATER: ', fireTeam, matchDetails)
                 const summoner = makeCardId(fireTeam[0].toString());
                 return [summoner, fireTeam];
             }
@@ -155,13 +155,13 @@ async function openSplinter() {
     await browser.close()
 }
 
-// cron.schedule('*/4 * * * *', () => {
-//     try {
-//         openSplinter();
-//     }
-//     catch (e) {
-//         console.log('END Error: ', e);
-//     }
-// });
+cron.schedule('*/4 * * * *', () => {
+    try {
+        openSplinter();
+    }
+    catch (e) {
+        console.log('END Error: ', e);
+    }
+});
 
-openSplinter();
+// openSplinter();
