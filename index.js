@@ -3,7 +3,7 @@ require('dotenv').config()
 var cron = require('node-cron');
 const ask = require('./possibleTeams');
 const puppeteer = require('puppeteer');
-
+const getCards = require('./data/advancedCards');
 
 async function login(page) {
     try {
@@ -81,6 +81,9 @@ async function openSplinter() {
 
     //READ DAILY QUEST span#questDescription
 
+    // LOAD MY CARDS
+    const myCards = await getCards.getAdvancedCards('splinterlava')
+
     // LAUNCH the battle
     const [button] = await page.$x("//button[contains(., 'RANKED')]");
     button ? await button.click() : null;
@@ -99,7 +102,7 @@ async function openSplinter() {
                 checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
             ]);
             console.log('check: ', mana, rules, splinters);
-            return { mana: mana, rules: rules, splinters: splinters }
+            return { mana: mana, rules: rules, splinters: splinters, myCards: myCards }
         })
         .then((matchDetails) => [ask.possibleTeams(matchDetails), matchDetails])
         .then(([possibleTeams, matchDetails]) => {
