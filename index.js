@@ -1,7 +1,7 @@
 //'use strict';
 require('dotenv').config()
 var cron = require('node-cron');
-const ask = require('./askFormation');
+const ask = require('./possibleTeams');
 const puppeteer = require('puppeteer');
 
 
@@ -41,15 +41,15 @@ async function checkMana(page) {
 }
 
 async function checkMatchMana(page) {
-    const manaCap = await page.evaluate(() => document.querySelectorAll('div.mana-cap-value')[0].innerText);
-    return manaCap;
+    const mana = await page.$$eval("div.col-md-12 > div.mana-cap__icon", el => el.map(x => x.getAttribute("data-original-title")));
+    const manaValue = parseInt(mana[0].split(':')[1], 10);
+    console.log(manaValue);
+    return manaValue;
 }
 
 async function checkMatchRules(page) {
     const rules = await page.$$eval("div.col-md-12 > img", el => el.map(x => x.getAttribute("data-original-title")));
-    const ruleNames = rules.map(x => x.split(':')[0])
-    console.log('RULES', rules, ruleNames.join('|'));
-    return ruleNames.join('|');
+    return rules.map(x => x.split(':')[0]).join('|')
 }
 
 const splinterIsActive = (splinterUrl) => {
@@ -59,10 +59,7 @@ const splinterIsActive = (splinterUrl) => {
 
 async function checkMatchActiveSplinters(page) {
     const splinterUrls = await page.$$eval("div.col-sm-4 > img", el => el.map(x => x.getAttribute("src")));
-    // const splinters = await page.evaluate('document.querySelector("div.combat__splinters > img").getAttribute("data-original-title")');
-    const splinters = splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
-    console.log('SPLINTERS', splinters)
-    return splinters;
+    return splinterUrls.map(splinter => splinterIsActive(splinter)).filter(x => x);
 }
 
 const makeCardId = (id) => '#card_' + id;
@@ -80,7 +77,7 @@ async function openSplinter() {
     await page.goto('https://splinterlands.io/');
     await page.waitFor(4000);
     await login(page);
-    await page.waitFor(6000);
+    await page.waitFor(10000);
 
     //READ DAILY QUEST span#questDescription
 
@@ -96,14 +93,15 @@ async function openSplinter() {
     await page.waitForSelector('.btn--create-team', { timeout: 90000 })
         //then read rules and details 
         .then(async () => {
-            let [rules, mana, splinters] = await Promise.all([
-                checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
+            let [mana, rules, splinters] = await Promise.all([
                 checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
+                checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
                 checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
             ]);
-            return { rules: rules, mana: mana, splinters: splinters }
+            console.log('check: ', mana, rules, splinters);
+            return { mana: mana, rules: rules, splinters: splinters }
         })
-        .then((matchDetails) => [ask.askFormation(matchDetails), matchDetails])
+        .then((matchDetails) => [ask.possibleTeams(matchDetails), matchDetails])
         .then(([possibleTeams, matchDetails]) => {
             if (possibleTeams) {
                 page.click('.btn--create-team')[0];
@@ -111,57 +109,59 @@ async function openSplinter() {
             }
             page.click('.btn--surrender')[0]
         })
-        .then(([possibleTeams, matchDetails]) => { console.log('possible teams: ', possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
+        .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
-            if (matchDetails.splinters.includes('fire' && possibleTeams.find(x => x[7] === 'fire'))) {
+            if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
                 const fireTeam = possibleTeams.find(x => x[7] === 'fire')
-                console.log('GIOCA FIRE: ', fireTeam, matchDetails)
+                console.log('PLAY FIRE: ', fireTeam, matchDetails)
                 const summoner = makeCardId(fireTeam[0].toString());
-                console.log('summoner: ', summoner);
                 return [summoner, fireTeam];
             }
 
             let i = 0;
-            while (i < possibleTeams.length) {
+            while (i <= possibleTeams.length - 1) {
                 if (possibleTeams[i][7] !== 'dragon' && matchDetails.splinters.includes(possibleTeams[i][7])) {
-                    console.log('PRESA: ', possibleTeams[i], matchDetails)
-                    const summoner = makeCardId(possibleTeams[i][0].toString()); console.log('summoner: ', summoner); return [summoner, possibleTeams[i]]
+                    console.log('SELECTED: ', possibleTeams[i]);
+                    const summoner = makeCardId(possibleTeams[i][0].toString());
+                    return [summoner, possibleTeams[i]]
                 }
-                console.log('SCARTATA: ', possibleTeams[i])
+                console.log('DISCARDED: ', possibleTeams[i])
                 i++;
             }
+            throw new Error('no team available to be played');
         }) //select 
-        .then(([summoner, team]) => {
-            page.waitForSelector(summoner)
-                .then(() => page.click(summoner)
-                    .then(() => {
-                        page.waitForSelector(makeCardId(team[1].toString()))
-                            .then(() => page.click(makeCardId(team[1].toString())))
-                            .then(() => team[2] ? page.click(makeCardId(team[2].toString())) : console.log('nocard 2'))
-                            .then(() => team[3] ? page.click(makeCardId(team[3].toString())) : console.log('nocard 3'))
-                            .then(() => team[4] ? page.click(makeCardId(team[4].toString())) : console.log('nocard 4'))
-                            .then(() => team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5'))
-                            .then(() => team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6'))
-                        console.log('team:', team)
-                    })
-                    .catch(e => console.log('ERROR: ', e))
-                ); return team
+        .then(async ([summoner, team]) => {
+            await page.waitForSelector(summoner);
+            await page.click(summoner);
+            await page.waitForSelector(makeCardId(team[1].toString()));
+            await page.click(makeCardId(team[1].toString()));
+            await page.waitFor(1000);
+            await team[2] ? page.click(makeCardId(team[2].toString())) : console.log('nocard 2');
+            await page.waitFor(1000);
+            await team[3] ? page.click(makeCardId(team[3].toString())) : console.log('nocard 3');
+            await page.waitFor(1000);
+            await team[4] ? page.click(makeCardId(team[4].toString())) : console.log('nocard 4');
+            await page.waitFor(1000);
+            await team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5');
+            await page.waitFor(1000);
+            await team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6');
         })
         .then(() => page.waitFor(5000))
         .then(() => page.click('.btn-green')[0]) //start fight
         .then(() => page.waitFor(5000))
         .then(() => browser.close())
         .catch((e) => { console.log('Error: ', e); browser.close() })
+    await browser.close()
 }
 
-cron.schedule('*/4 * * * *', () => {
-    try {
-        openSplinter();
-    }
-    catch (e) {
-        console.log('Error: ', e);
-    }
-});
+// cron.schedule('*/4 * * * *', () => {
+//     try {
+//         openSplinter();
+//     }
+//     catch (e) {
+//         console.log('END Error: ', e);
+//     }
+// });
 
-// openSplinter();
+openSplinter();
