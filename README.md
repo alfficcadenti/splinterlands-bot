@@ -6,8 +6,9 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 run `npm start`
 
-to start BOT login routine. username and password needs to be specified in the file .env in the root as variable:
-ACCOUNT and PASSWORD.
+to start BOT login routine. username and password needs to be specified in the file .env in the root as variable like:
+`ACCOUNT=youremail@email.com
+PASSWORD=yourpassword`
 
 ## battleGetData.js
 
@@ -33,7 +34,7 @@ _Example_: `[{"summoner_id":178,
       "monster_3_level":1,
       "monster_3_abilities":[  ],
       "monster_4_id":"",
-      "monster_4_level":"",
+      "monster_4_level":""
       "monster_4_abilities":"",
       "monster_5_id":"",
       "monster_5_level":"",
