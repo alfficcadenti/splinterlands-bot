@@ -55,7 +55,7 @@ const cardColor = (id) => {
 }
 
 async function checkMatchRules(page) {
-    const rules = await page.$$eval("div.col-md-12 > img", el => el.map(x => x.getAttribute("data-original-title")));
+    const rules = await page.$$eval("div.combat__rules > div.row > div>  img", el => el.map(x => x.getAttribute("data-original-title")));
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
@@ -121,22 +121,20 @@ async function openSplinter() {
         .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
-            if (matchDetails.splinters.includes('dragon') && possibleTeams.find(x => x[7] === 'dragon')) {
-                const fireTeam = possibleTeams.find(x => x[7] === 'dragon')
+            //TO UNCOMMENT FOR QUEST after choose the color
+            if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
+                const fireTeam = possibleTeams.find(x => x[7] === 'fire')
                 try {
                     if (matchDetails.splinters.includes(teamHelper.teamSplinterToPlay(fireTeam).toLowerCase())) {
-                        console.log('PLAY DRAGONS: ', teamHelper.teamSplinterToPlay(fireTeam), fireTeam)
+                        console.log('PLAY fire: ', teamHelper.teamSplinterToPlay(fireTeam), fireTeam)
                         const summoner = makeCardId(fireTeam[0].toString());
                         return [summoner, fireTeam];
                     }
-                    console.log('DRAGON but deck not active')
+                    //console.log('fire but deck not active')
 
                 } catch (e) {
-                    console.log('DRAGON DECK ERROR: ', e)
+                    console.log('fire DECK ERROR: ', e)
                 }
-                //console.log('PLAY DRAGONS: ', fireTeam)
-                // const summoner = makeCardId(fireTeam[0].toString());
-                // return [summoner, fireTeam];
             }
 
 
@@ -153,7 +151,7 @@ async function openSplinter() {
                 // } catch (e) { console.log('ERROR DECK dragon active but not the team:', e) }
 
                 // if (possibleTeams[i][7] !== 'dragon' && matchDetails.splinters.includes(possibleTeams[i][7])) {
-                if (matchDetails.splinters.includes(possibleTeams[i][7]) && possibleTeams[i][7] !== 'dragon') {
+                if (matchDetails.splinters.includes(possibleTeams[i][7])) {
                     console.log('SELECTED: ', possibleTeams[i]);
                     const summoner = makeCardId(possibleTeams[i][0].toString());
                     return [summoner, possibleTeams[i]]
@@ -197,13 +195,13 @@ async function openSplinter() {
     await browser.close()
 }
 
-// cron.schedule('*/4 * * * *', () => {
-//     try {
-//         openSplinter();
-//     }
-//     catch (e) {
-//         console.log('END Error: ', e);
-//     }
-// });
+cron.schedule('*/4 * * * *', () => {
+    try {
+        openSplinter();
+    }
+    catch (e) {
+        console.log('END Error: ', e);
+    }
+});
 
-openSplinter();
+// openSplinter();
