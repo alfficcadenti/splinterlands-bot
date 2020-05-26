@@ -1,10 +1,14 @@
 # splinterlands-bot
 
+This is my personal project of a BOT to play the game [Splinterlands](https://www.splinterlands.com)
+
 ## index.js
 
 run `npm start`
 
-to start BOT login routine. username and password needs to be specified. **currently working until cards selection**.
+to start BOT login routine. username and password needs to be specified in the file .env in the root as variable like:
+`ACCOUNT=youremail@email.com
+PASSWORD=yourpassword`
 
 ## battleGetData.js
 
@@ -30,7 +34,7 @@ _Example_: `[{"summoner_id":178,
       "monster_3_level":1,
       "monster_3_abilities":[  ],
       "monster_4_id":"",
-      "monster_4_level":"",
+      "monster_4_level":""
       "monster_4_abilities":"",
       "monster_5_id":"",
       "monster_5_level":"",
@@ -69,4 +73,4 @@ input data for future model:
 
 ### Edge cases:
 
-- when a player fled the battle: to be removed from the stats
+- when a player fled the battle: the match is not recorded

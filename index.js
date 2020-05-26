@@ -4,6 +4,8 @@ var cron = require('node-cron');
 const ask = require('./possibleTeams');
 const puppeteer = require('puppeteer');
 const getCards = require('./data/advancedCards');
+const cardsDetails = require("./data/cardsDetails.json");
+const teamHelper = require('./teamSplinterToPlay');
 
 const mostWinningSummonerTank = (possibleTeamsList) => {
     mostWinningDeck = { fire: 0, death: 0, earth: 0, water: 0, life: 0 }
@@ -65,8 +67,13 @@ async function checkMatchMana(page) {
     return manaValue;
 }
 
+const cardColor = (id) => {
+    const card = cardsDetails.find(o => o.id === id);
+    return card.color;
+}
+
 async function checkMatchRules(page) {
-    const rules = await page.$$eval("div.col-md-12 > img", el => el.map(x => x.getAttribute("data-original-title")));
+    const rules = await page.$$eval("div.combat__rules > div.row > div>  img", el => el.map(x => x.getAttribute("data-original-title")));
     return rules.map(x => x.split(':')[0]).join('|')
 }
 
@@ -87,7 +94,7 @@ async function openSplinter() {
     const browser = await puppeteer.launch({ headless: false });
     const page = await browser.newPage();
     await page.setViewport({
-        width: 1200,
+        width: 1500,
         height: 800,
         deviceScaleFactor: 1,
     });
@@ -100,7 +107,7 @@ async function openSplinter() {
     //READ DAILY QUEST span#questDescription
 
     // LOAD MY CARDS
-    const myCards = await getCards.getAdvancedCards('splinterlava')
+    const myCards = await getCards.getAdvancedCards(process.env.ACCOUNT.split('@')[0])
 
     // LAUNCH the battle
     const [button] = await page.$x("//button[contains(., 'RANKED')]");
@@ -119,7 +126,6 @@ async function openSplinter() {
                 checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
                 checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
             ]);
-            console.log('check: ', mana, rules, splinters);
             return { mana: mana, rules: rules, splinters: splinters, myCards: myCards }
         })
         .then((matchDetails) => [ask.possibleTeams(matchDetails), matchDetails])
@@ -130,21 +136,43 @@ async function openSplinter() {
             }
             page.click('.btn--surrender')[0]
         })
-        .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
+        .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
             const bestCombination = mostWinningSummonerTank(possibleTeams)
             console.log('BEST SUMMONER and TANK', bestCombination)
-            if (matchDetails.splinters.includes('water') && possibleTeams.find(x => x[7] === 'water')) {
-                const fireTeam = possibleTeams.find(x => x[7] === 'water')
-                console.log('PLAY WATER: ', fireTeam, matchDetails)
-                const summoner = makeCardId(fireTeam[0].toString());
-                return [summoner, fireTeam];
+
+            //TO UNCOMMENT FOR QUEST after choose the color
+            if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
+                const fireTeam = possibleTeams.find(x => x[7] === 'fire')
+                try {
+                    if (matchDetails.splinters.includes(teamHelper.teamSplinterToPlay(fireTeam).toLowerCase())) {
+                        console.log('PLAY fire: ', teamHelper.teamSplinterToPlay(fireTeam), fireTeam)
+                        const summoner = makeCardId(fireTeam[0].toString());
+                        return [summoner, fireTeam];
+                    }
+                    //console.log('fire but deck not active')
+
+                } catch (e) {
+                    console.log('fire DECK ERROR: ', e)
+                }
             }
+
 
             let i = 0;
             while (i <= possibleTeams.length - 1) {
-                if (possibleTeams[i][7] !== 'dragon' && matchDetails.splinters.includes(possibleTeams[i][7])) {
+
+                // try {
+                //     console.log('TEAMCOLOR', teamHelper.teamSplinterToPlay(possibleTeams[i]))
+                //     if (matchDetails.splinters.includes(teamHelper.teamSplinterToPlay(possibleTeams[i]).toLowerCase())) {
+                //         console.log('PLAY DRAGONS: ', possibleTeams[i])
+                //         const summoner = makeCardId(possibleTeams[i][0].toString());
+                //         return [summoner, possibleTeams[i]];
+                //     }
+                // } catch (e) { console.log('ERROR DECK dragon active but not the team:', e) }
+
+                // if (possibleTeams[i][7] !== 'dragon' && matchDetails.splinters.includes(possibleTeams[i][7])) {
+                if (matchDetails.splinters.includes(possibleTeams[i][7])) {
                     console.log('SELECTED: ', possibleTeams[i]);
                     const summoner = makeCardId(possibleTeams[i][0].toString());
                     return [summoner, possibleTeams[i]]
@@ -156,7 +184,16 @@ async function openSplinter() {
         }) //select 
         .then(async ([summoner, team]) => {
             await page.waitForSelector(summoner);
-            await page.click(summoner);
+            await page.click(summoner)
+            try {
+                console.log(cardColor(team[0]))
+                if (cardColor(team[0]) === 'Gold') {
+                    console.log('TEAMCOLOR', teamHelper.teamSplinterToPlay(team))
+                    await page.waitForXPath(`//div[@data-original-title="${teamHelper.teamSplinterToPlay(team)}"]`, 5000).then(selector => selector.click())
+                }
+            } catch (e) {
+                console.log('ERROR AFTER Summoner: ', e)
+            }
             await page.waitForSelector(makeCardId(team[1].toString()));
             await page.click(makeCardId(team[1].toString()));
             await page.waitFor(1000);
@@ -169,12 +206,13 @@ async function openSplinter() {
             await team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5');
             await page.waitFor(1000);
             await team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6');
+            await page.waitFor(3000);
+            await page.click('.btn-green')[0]; //start fight
+            await page.waitFor(5000);
+            console.log('DONE')
+            browser.close();
         })
-        .then(() => page.waitFor(5000))
-        .then(() => page.click('.btn-green')[0]) //start fight
-        .then(() => page.waitFor(5000))
-        .then(() => browser.close())
-        .catch((e) => { console.log('Error: ', e); browser.close() })
+        .catch((e) => { console.log('Error! ', e); browser.close() })
     await browser.close()
 }
 
