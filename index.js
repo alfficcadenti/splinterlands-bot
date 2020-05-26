@@ -11,7 +11,7 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
     mostWinningDeck = { fire: 0, death: 0, earth: 0, water: 0, life: 0 }
     const mostWinningSummoner = {};
     const mostWinningTank = {};
-    possibleTeamsList.forEach(x=> {
+    possibleTeamsList.forEach(x => {
         const summoner = x[0];
         mostWinningSummoner[summoner] = mostWinningSummoner[summoner] ? mostWinningSummoner[summoner] + 1 : 1;
     })
@@ -21,8 +21,9 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
         console.log(mostWinningTank)
         mostWinningTank[tank] = mostWinningTank[tank] ? mostWinningTank[tank] + 1 : 1;
     })
-    const bestTank = Object.keys(mostWinningTank).reduce((a, b) => mostWinningTank[a] > mostWinningTank[b] ? a : b);
-    return {bestSummoner: bestSummoner, bestTank: bestTank}
+    //const bestTank = mostWinningTank && Object.keys(mostWinningTank).reduce((a, b) => mostWinningTank[a] > mostWinningTank[b] ? a : b);
+    // return { bestSummoner: bestSummoner, summonerWins: mostWinningSummoner[bestSummoner], tankWins: mostWinningTank[bestTank], bestTank: bestTank }
+    return { bestSummoner: bestSummoner, summonerWins: mostWinningSummoner[bestSummoner] }
 }
 
 async function login(page) {
@@ -137,10 +138,20 @@ async function openSplinter() {
             page.click('.btn--surrender')[0]
         })
         .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
-        .then(([possibleTeams, matchDetails]) => {
+        .then(async ([possibleTeams, matchDetails]) => {
 
             const bestCombination = mostWinningSummonerTank(possibleTeams)
             console.log('BEST SUMMONER and TANK', bestCombination)
+            if (bestCombination.summonerWins > 1) {
+                const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
+                console.log('BEST TEAM', bestTeam)
+                if (matchDetails.splinters.includes(teamHelper.teamSplinterToPlay(bestTeam).toLowerCase())) {
+                    console.log('PLAY BEST SUMMONER and TANK: ', teamHelper.teamSplinterToPlay(bestTeam), bestTeam)
+                    const summoner = makeCardId(bestTeam[0].toString());
+                    return [summoner, bestTeam];
+                }
+
+            }
 
             //TO UNCOMMENT FOR QUEST after choose the color
             if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
@@ -197,15 +208,24 @@ async function openSplinter() {
             await page.waitForSelector(makeCardId(team[1].toString()));
             await page.click(makeCardId(team[1].toString()));
             await page.waitFor(1000);
-            await team[2] ? page.click(makeCardId(team[2].toString())) : console.log('nocard 2');
+            // await team[2] ? page.click(makeCardId(team[2].toString())) : console.log('nocard 2');
+            // await page.waitFor(1000);
+            // await team[3] ? page.click(makeCardId(team[3].toString())) : console.log('nocard 3');
+            // await page.waitFor(1000);
+            // await team[4] ? page.click(makeCardId(team[4].toString())) : console.log('nocard 4');
+            // await page.waitFor(1000);
+            // await team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5');
+            // await page.waitFor(1000);
+            // await team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6');
+            await team[2] ? page.waitForSelector(makeCardId(team[2].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 2');
             await page.waitFor(1000);
-            await team[3] ? page.click(makeCardId(team[3].toString())) : console.log('nocard 3');
+            await team[3] ? page.waitForSelector(makeCardId(team[3].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 3');
             await page.waitFor(1000);
-            await team[4] ? page.click(makeCardId(team[4].toString())) : console.log('nocard 4');
+            await team[4] ? page.waitForSelector(makeCardId(team[4].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 4');
             await page.waitFor(1000);
-            await team[5] ? page.click(makeCardId(team[5].toString())) : console.log('nocard 5');
+            await team[5] ? page.waitForSelector(makeCardId(team[5].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 5');
             await page.waitFor(1000);
-            await team[6] ? page.click(makeCardId(team[6].toString())) : console.log('nocard 6');
+            await team[6] ? page.waitForSelector(makeCardId(team[6].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 6');
             await page.waitFor(3000);
             await page.click('.btn-green')[0]; //start fight
             await page.waitFor(5000);
@@ -216,7 +236,7 @@ async function openSplinter() {
     await browser.close()
 }
 
-cron.schedule('*/4 * * * *', () => {
+cron.schedule('*/5 * * * *', () => {
     try {
         openSplinter();
     }
