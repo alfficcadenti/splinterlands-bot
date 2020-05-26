@@ -10,11 +10,13 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dimas-kmeans": "^1.0.3",
     "dotenv": "^8.2.0",
+    "hierarchical-clustering": "^1.1.0",
+    "minimist": ">=0.2.1",
     "node-cron": "^2.0.3",
     "node-fetch": "^2.6.0",
     "pg": "^8.0.3",
-    "puppeteer": "^2.1.1",
-    "minimist": ">=0.2.1"
+    "puppeteer": "^2.1.1"
   }
 }

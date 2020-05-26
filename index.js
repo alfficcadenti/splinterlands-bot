@@ -5,6 +5,24 @@ const ask = require('./possibleTeams');
 const puppeteer = require('puppeteer');
 const getCards = require('./data/advancedCards');
 
+const mostWinningSummonerTank = (possibleTeamsList) => {
+    mostWinningDeck = { fire: 0, death: 0, earth: 0, water: 0, life: 0 }
+    const mostWinningSummoner = {};
+    const mostWinningTank = {};
+    possibleTeamsList.forEach(x=> {
+        const summoner = x[0];
+        mostWinningSummoner[summoner] = mostWinningSummoner[summoner] ? mostWinningSummoner[summoner] + 1 : 1;
+    })
+    const bestSummoner = Object.keys(mostWinningSummoner).reduce((a, b) => mostWinningSummoner[a] > mostWinningSummoner[b] ? a : b);
+    possibleTeamsList.filter(team => team[0] == bestSummoner).forEach(team => {
+        const tank = team[1];
+        console.log(mostWinningTank)
+        mostWinningTank[tank] = mostWinningTank[tank] ? mostWinningTank[tank] + 1 : 1;
+    })
+    const bestTank = Object.keys(mostWinningTank).reduce((a, b) => mostWinningTank[a] > mostWinningTank[b] ? a : b);
+    return {bestSummoner: bestSummoner, bestTank: bestTank}
+}
+
 async function login(page) {
     try {
         page.waitForSelector('#log_in_button > button').then(() => page.click('#log_in_button > button'))
@@ -115,6 +133,8 @@ async function openSplinter() {
         .then(([possibleTeams, matchDetails]) => { console.log('rules and possible teams: ', matchDetails, possibleTeams, possibleTeams.length); if (possibleTeams.length !== 0) { return [possibleTeams, matchDetails] } else { console.log('NO TEAMS') }; })
         .then(([possibleTeams, matchDetails]) => {
 
+            const bestCombination = mostWinningSummonerTank(possibleTeams)
+            console.log('BEST SUMMONER and TANK', bestCombination)
             if (matchDetails.splinters.includes('water') && possibleTeams.find(x => x[7] === 'water')) {
                 const fireTeam = possibleTeams.find(x => x[7] === 'water')
                 console.log('PLAY WATER: ', fireTeam, matchDetails)

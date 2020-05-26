@@ -47,7 +47,7 @@ const battlesFilterByManacap = (mana, ruleset) => history.filter(
         (ruleset ? battle.ruleset === ruleset : true)
 )
 
-const cardsIds = (mana, ruleset, splinters) => battlesFilterByManacap(mana, ruleset, splinters)
+const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterByManacap(mana, ruleset, splinters)
     .map(
         (x) => {
             return [
@@ -72,7 +72,7 @@ const cardsIds = (mana, ruleset, splinters) => battlesFilterByManacap(mana, rule
 // const inactive = ['White']
 
 const askFormation = function (matchDetails) {
-    return cardsIds(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
+    return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
         .filter(
             x => availabilityCheck(matchDetails.myCards, x))
         .map(element => element)//cards.cardByIds(element)
@@ -97,6 +97,6 @@ module.exports.possibleTeams = possibleTeams;
 // // console.log([...new Set(summoners)])
 // console.log(summonerColor(27))
 
-// // // TO TEST uncomment below:
-// const matchDetails = { mana: 35, rules: 'Earthquake', splinters: ['fire', 'water'] }
-// console.log(possibleTeams(matchDetails))
+// // TO TEST uncomment below:
+const matchDetails = { mana: 30, rules: '', splinters: ['fire','water','life','earth','death'], myCards: myCards}
+console.log(possibleTeams(matchDetails))
