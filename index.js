@@ -100,19 +100,11 @@ async function startBotPlayMatch() {
             await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards)}"]`, 5000).then(selector => selector.click())
         }
 
-        await page.waitForSelector(card.makeCardId(teamToPlay.cards[1].toString()));
         for (i = 1; i <=6; i++) {
             await teamToPlay.cards[i] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[i].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard ',i);
             await page.waitFor(1000);
         }
-        
-        // await teamToPlay.cards[3] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[3].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 3');
-        // await page.waitFor(1000);
-        // await teamToPlay.cards[4] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[4].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 4');
-        // await page.waitFor(1000);
-        // await teamToPlay.cards[5] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[5].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 5');
-        // await page.waitFor(1000);
-        // await teamToPlay.cards[6] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[6].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 6');
+
         await page.waitFor(5000);
         await page.click('.btn-green')[0]; //start fight
         await page.waitFor(5000);
