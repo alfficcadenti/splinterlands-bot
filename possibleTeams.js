@@ -74,6 +74,7 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterBy
 // const inactive = ['White']
 
 const askFormation = function (matchDetails) {
+    console.log('INPUT: ',matchDetails.mana, matchDetails.rules, matchDetails.splinters)
     return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
         .filter(
             x => availabilityCheck(matchDetails.myCards, x))
@@ -93,10 +94,32 @@ const possibleTeams = async (matchDetails) => {
     return possibleTeams;
 }
 
+const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
+            const bestCombination = await battles.mostWinningSummonerTank(possibleTeams)
+            console.log('BEST SUMMONER and TANK', bestCombination)
+            if (bestCombination.summonerWins > 1) {
+                const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
+                console.log('BEST TEAM', bestTeam)
+                if(matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase()) && helper.teamActualSplinterToPlay(helper.teamSplinterToPlay(bestTeam)) !== '')
+                if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
+                    console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
+                    const summoner = card.makeCardId(bestTeam[0].toString());
+                    return [summoner, bestTeam];
+                }
+            }
+        }
+
 const teamSelection = async (possibleTeams, matchDetails) => {
+    if(possibleTeams.length > 5) {
+        //find best combination (most used)
+        const [summoner, bestTeam] = mostWinningSummonerTankCombo(possibleTeams, matchDetails);
+        if (summoner && bestTeam) {
+            return { summoner: summoner, cards: bestTeam};
+        }
+    }
+
     let i = 0;
     for (i = 0; i < possibleTeams.length -1; i++) {
-        console.log('DEBUG:', helper.teamActualSplinterToPlay(possibleTeams[i]), possibleTeams[i][7])
         if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '') {
             console.log('SELECTED: ', possibleTeams[i]);
             const summoner = card.makeCardId(possibleTeams[i][0].toString());
