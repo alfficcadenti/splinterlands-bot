@@ -1,4 +1,6 @@
 const cards = require('./getCards.js');
+const card = require('./cards');
+const helper = require('./helper');
 
 const summoners = [{ 224: 'dragon' },
 { 27: 'earth' },
@@ -79,7 +81,7 @@ const askFormation = function (matchDetails) {
 
 }
 
-const possibleTeams = (matchDetails) => {
+const possibleTeams = async (matchDetails) => {
     let possibleTeams = [];
     while (matchDetails.mana > 0) {
         possibleTeams = askFormation(matchDetails)
@@ -91,7 +93,25 @@ const possibleTeams = (matchDetails) => {
     return possibleTeams;
 }
 
+const teamSelection = async (possibleTeams, matchDetails) => {
+    let i = 0;
+    for (i = 0; i < possibleTeams.length -1; i++) {
+        console.log('DEBUG:', helper.teamActualSplinterToPlay(possibleTeams[i]), possibleTeams[i][7])
+        if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '') {
+            console.log('SELECTED: ', possibleTeams[i]);
+            const summoner = card.makeCardId(possibleTeams[i][0].toString());
+            return { summoner: summoner, cards: possibleTeams[i]};
+        }
+        console.log('DISCARDED: ', possibleTeams[i])
+    }
+    throw new Error('NO TEAM available');
+}
+
+
 module.exports.possibleTeams = possibleTeams;
+module.exports.teamSelection = teamSelection;
+
+
 // const summoners = history.map(x => x.summoner_id);
 
 // // console.log([...new Set(summoners)])

@@ -51,23 +51,14 @@ async function startBotPlayMatch() {
     const possibleTeams = await ask.possibleTeams(matchDetails);
 
     if(possibleTeams && possibleTeams.length) {
-        console.log('Possible Teams: ', possibleTeams.length);
+        console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
     } else {
         //page.click('.btn--surrender')[0]; //commented to prevent alert dialog
         throw new Error('NO TEAMS available to be played');
     }
 
     //TEAM SELECTION
-    let teamToPlay = [];
-    let i = 0;
-    for (i = 0; i < possibleTeams.length -1; i++) {
-        if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamSplinterToPlay(possibleTeams[i] !== '')) {
-            console.log('SELECTED: ', possibleTeams[i]);
-            const summoner = card.makeCardId(possibleTeams[i][0].toString());
-            teamToPlay = [summoner, possibleTeams[i]];
-        }
-        console.log('DISCARDED: ', possibleTeams[i])
-    }
+    const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails);
             // const bestCombination = battles.mostWinningSummonerTank(possibleTeams)
             // console.log('BEST SUMMONER and TANK', bestCombination)
             // if (bestCombination.summonerWins > 1) {
@@ -96,35 +87,39 @@ async function startBotPlayMatch() {
             //         console.log('fire DECK ERROR: ', e)
             //     }
             // }
-
-    page.click('.btn--create-team')[0];
+    if (teamToPlay) {
+        page.click('.btn--create-team')[0];
+    } else {
+        throw new Error('Team Selection error');
+    }
 
     try {
         await page.waitForSelector(teamToPlay.summoner).then(summonerButton => summonerButton.click());
-        if (card.color(team[0]) === 'Gold') {
-            console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(team))
-            await page.waitForXPath(`//div[@data-original-title="${helper.teamSplinterToPlay(team)}"]`, 5000).then(selector => selector.click())
+        if (card.color(teamToPlay.cards[0]) === 'Gold') {
+            console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(teamToPlay.cards))
+            await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards)}"]`, 5000).then(selector => selector.click())
         }
 
-        await page.waitForSelector(card.makeCardId(team[1].toString()));
-        await page.click(card.makeCardId(team[1].toString()));
-        await page.waitFor(1000);
-        await team[2] ? page.waitForSelector(card.makeCardId(team[2].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 2');
-        await page.waitFor(1000);
-        await team[3] ? page.waitForSelector(card.makeCardId(team[3].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 3');
-        await page.waitFor(1000);
-        await team[4] ? page.waitForSelector(card.makeCardId(team[4].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 4');
-        await page.waitFor(1000);
-        await team[5] ? page.waitForSelector(card.makeCardId(team[5].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 5');
-        await page.waitFor(1000);
-        await team[6] ? page.waitForSelector(card.makeCardId(team[6].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 6');
-        await page.waitFor(3000);
+        await page.waitForSelector(card.makeCardId(teamToPlay.cards[1].toString()));
+        for (i = 1; i <=6; i++) {
+            await teamToPlay.cards[i] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[i].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard ',i);
+            await page.waitFor(1000);
+        }
+        
+        // await teamToPlay.cards[3] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[3].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 3');
+        // await page.waitFor(1000);
+        // await teamToPlay.cards[4] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[4].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 4');
+        // await page.waitFor(1000);
+        // await teamToPlay.cards[5] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[5].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 5');
+        // await page.waitFor(1000);
+        // await teamToPlay.cards[6] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[6].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard 6');
+        await page.waitFor(5000);
         await page.click('.btn-green')[0]; //start fight
         await page.waitFor(5000);
     } catch (e) {
-        console.log('Error in cards selection!');
+        console.log('Error in cards selection!', e);
         await browser.close();
-        throw new Error('Error in cards selection!');
+        throw new Error(e);
     }
 
     await browser.close()
