@@ -12,8 +12,7 @@ const helper = require('./helper');
 
 const ask = require('./possibleTeams');
 
-async function startBotPlayMatch() {
-    const browser = await puppeteer.launch({ headless: false });
+async function startBotPlayMatch(browser) {
     const page = await browser.newPage();
     await page.setViewport({
         width: 1500,
@@ -41,52 +40,53 @@ async function startBotPlayMatch() {
         splinterlandsPage.checkMatchActiveSplinters(page).then((splinters) => splinters).catch(() => 'no splinters')
     ]);
 
-    const matchDetails = { 
-        mana: mana, 
-        rules: rules, 
-        splinters: splinters, 
-        myCards: myCards 
+    const matchDetails = {
+        mana: mana,
+        rules: rules,
+        splinters: splinters,
+        myCards: myCards
     }
 
     const possibleTeams = await ask.possibleTeams(matchDetails);
 
-    if(possibleTeams && possibleTeams.length) {
+    if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
     } else {
         //page.click('.btn--surrender')[0]; //commented to prevent alert dialog
+        await browser.close();
         throw new Error('NO TEAMS available to be played');
     }
 
     //TEAM SELECTION
     const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails);
-            // const bestCombination = battles.mostWinningSummonerTank(possibleTeams)
-            // console.log('BEST SUMMONER and TANK', bestCombination)
-            // if (bestCombination.summonerWins > 1) {
-            //     const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
-            //     console.log('BEST TEAM', bestTeam)
-            //     if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
-            //         console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
-            //         const summoner = card.makeCardId(bestTeam[0].toString());
-            //         return [summoner, bestTeam];
-            //     }
+    // const bestCombination = battles.mostWinningSummonerTank(possibleTeams)
+    // console.log('BEST SUMMONER and TANK', bestCombination)
+    // if (bestCombination.summonerWins > 1) {
+    //     const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
+    //     console.log('BEST TEAM', bestTeam)
+    //     if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
+    //         console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
+    //         const summoner = card.makeCardId(bestTeam[0].toString());
+    //         return [summoner, bestTeam];
+    //     }
 
-            // }
+    // }
 
-            // //TO UNCOMMENT FOR QUEST after choose the color
-            // if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
-            //     const fireTeam = possibleTeams.find(x => x[7] === 'fire')
-            //     try {
-            //         if (matchDetails.splinters.includes(helper.teamSplinterToPlay(fireTeam).toLowerCase())) {
-            //             console.log('PLAY fire: ', helper.teamSplinterToPlay(fireTeam), fireTeam)
-            //             const summoner = card.makeCardId(fireTeam[0].toString());
-            //             return [summoner, fireTeam];
-            //         }
-            //         //console.log('fire but deck not active')
+    // //TO UNCOMMENT FOR QUEST after choose the color
+    // if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
+    //     const fireTeam = possibleTeams.find(x => x[7] === 'fire')
+    //     try {
+    //         if (matchDetails.splinters.includes(helper.teamSplinterToPlay(fireTeam).toLowerCase())) {
+    //             console.log('PLAY fire: ', helper.teamSplinterToPlay(fireTeam), fireTeam)
+    //             const summoner = card.makeCardId(fireTeam[0].toString());
+    //             return [summoner, fireTeam];
+    //         }
+    //         //console.log('fire but deck not active')
 
-            //     } catch (e) {
-            //         console.log('fire DECK ERROR: ', e)
-            //     }
-            // }
+    //     } catch (e) {
+    //         console.log('fire DECK ERROR: ', e)
+    //     }
+    // }
     if (teamToPlay) {
         page.click('.btn--create-team')[0];
     } else {
@@ -100,30 +100,34 @@ async function startBotPlayMatch() {
             await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards)}"]`, 5000).then(selector => selector.click())
         }
 
-        for (i = 1; i <=6; i++) {
-            await teamToPlay.cards[i] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[i].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard ',i);
+        for (i = 1; i <= 6; i++) {
+            await teamToPlay.cards[i] ? page.waitForSelector(card.makeCardId(teamToPlay.cards[i].toString()), { timeout: 3000 }).then(selector => selector.click()) : console.log('nocard ', i);
             await page.waitFor(1000);
         }
 
         await page.waitFor(5000);
         await page.click('.btn-green')[0]; //start fight
         await page.waitFor(5000);
+        await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);
         await browser.close();
         throw new Error(e);
     }
 
-    await browser.close()
+
 }
 
-// cron.schedule('*/5 * * * *', () => {
-//     try {
-//         startBotPlayMatch();
-//     }
-//     catch (e) {
-//         console.log('END Error: ', e);
-//     }
-// });
+cron.schedule('*/5 * * * *', async () => {
+    const browser = await puppeteer.launch({ headless: true });
+    try {
+        await startBotPlayMatch(browser);
+        await browser.close();
+    }
+    catch (e) {
+        console.log('END Error: ', e);
+        await browser.close();
+    }
+});
 
-startBotPlayMatch().catch((e) => console.log('Error: ',e));
+//startBotPlayMatch().catch((e) => console.log('Error: ',e));
