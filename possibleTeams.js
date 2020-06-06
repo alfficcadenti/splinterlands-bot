@@ -1,6 +1,8 @@
 const cards = require('./getCards.js');
 const card = require('./cards');
 const helper = require('./helper');
+const battles = require('./battles');
+const fetch = require("node-fetch");
 
 const summoners = [{ 224: 'dragon' },
 { 27: 'earth' },
@@ -36,36 +38,48 @@ const summonerColor = (id) => {
     return summonerDetails ? summonerDetails[id] : '';
 }
 
-const history = require("./data/newHistory.json");
+//const history = require("./data/newHistory.json");
 //const myCards = require('./data/myCards.js');
 const myCards = require('./data/splinterlavaCards.js');
 
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
 
-const battlesFilterByManacap = (mana, ruleset) => history.filter(
-    battle =>
-        battle.mana_cap == mana &&
-        (ruleset ? battle.ruleset === ruleset : true)
-)
+const getBattlesWithRuleset = (ruleset) => {
+    return fetch(`https://splinterlands-data-service.herokuapp.com/battles?ruleset=${ruleset}`)
+        .then(x => x && x.json())
+        .then(data => data)
+        .catch((e)=>console.log('fetch ', e))
+}
+
+const battlesFilterByManacap = async (mana, ruleset) => {
+    const history = await getBattlesWithRuleset(ruleset);
+    return history.filter(
+        battle =>
+            battle.mana_cap == mana &&
+            (ruleset ? battle.ruleset === ruleset : true)
+    )
+}
 
 const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterByManacap(mana, ruleset, splinters)
-    .map(
+    .then(x => {return x.map(
         (x) => {
             return [
-                x.summoner_id,
-                x.monster_1_id,
-                x.monster_2_id,
-                x.monster_3_id,
-                x.monster_4_id,
-                x.monster_5_id,
-                x.monster_6_id,
+                x.summoner_id ? parseInt(x.summoner_id ) : '',
+                x.monster_1_id ? parseInt(x.monster_1_id ) : '',
+                x.monster_2_id ? parseInt(x.monster_2_id ) : '',
+                x.monster_3_id ? parseInt(x.monster_3_id ) : '',
+                x.monster_4_id ? parseInt(x.monster_4_id ) : '',
+                x.monster_5_id ? parseInt(x.monster_5_id ) : '',
+                x.monster_6_id ? parseInt(x.monster_6_id ) : '',
                 summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
             ]
         }
     ).filter(
         team => splinters.includes(team[7])
     )
+    })
+
 
 
 //for (i=13; i<100; i++) {
@@ -76,16 +90,19 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterBy
 const askFormation = function (matchDetails) {
     console.log('INPUT: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters)
     return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
-        .filter(
+        .then(x=> x.filter(
             x => availabilityCheck(matchDetails.myCards, x))
-        .map(element => element)//cards.cardByIds(element)
+            .map(element => element)//cards.cardByIds(element)
+        )
 
 }
 
 const possibleTeams = async (matchDetails) => {
+    // const res = await getBattlesWithRuleset(matchDetails.rules);
+    // console.log(res);
     let possibleTeams = [];
     while (matchDetails.mana > 0) {
-        possibleTeams = askFormation(matchDetails)
+        possibleTeams = await askFormation(matchDetails)
         if (possibleTeams.length > 0) {
             return possibleTeams;
         }

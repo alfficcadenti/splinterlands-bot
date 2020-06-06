@@ -5,7 +5,6 @@ const puppeteer = require('puppeteer');
 
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
-const battles = require('./battles');
 const cardsDetails = require("./data/cardsDetails.json"); //saved json from api endpoint https://game-api.splinterlands.com/cards/get_details?
 const card = require('./cards');
 const helper = require('./helper');
@@ -118,16 +117,20 @@ async function startBotPlayMatch(browser) {
 
 }
 
-cron.schedule('*/5 * * * *', async () => {
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-        await startBotPlayMatch(browser);
-        await browser.close();
-    }
-    catch (e) {
-        console.log('END Error: ', e);
-        await browser.close();
-    }
-});
+// cron.schedule('*/5 * * * *', async () => {
+//     const browser = await puppeteer.launch({ headless: true });
+//     try {
+//         await startBotPlayMatch(browser);
+//         await browser.close();
+//     }
+//     catch (e) {
+//         console.log('END Error: ', e);
+//         await browser.close();
+//     }
+// });
 
-//startBotPlayMatch().catch((e) => console.log('Error: ',e));
+puppeteer.launch({ headless: false })
+    .then(async browser => startBotPlayMatch(browser)
+        .then(() => browser.close())
+        .catch((e) => console.log('Error: ',e))
+    )
