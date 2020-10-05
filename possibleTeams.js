@@ -38,7 +38,7 @@ const summonerColor = (id) => {
     return summonerDetails ? summonerDetails[id] : '';
 }
 
-//const history = require("./data/newHistory.json");
+const historyBackup = require("./data/newHistory.json");
 //const myCards = require('./data/myCards.js');
 const myCards = require('./data/splinterlavaCards.js');
 
@@ -49,12 +49,19 @@ const getBattlesWithRuleset = (ruleset) => {
     return fetch(`https://splinterlands-data-service.herokuapp.com/battles?ruleset=${ruleset}`)
         .then(x => x && x.json())
         .then(data => data)
-        .catch((e)=>console.log('fetch ', e))
+        .catch((e) => console.log('fetch ', e))
 }
 
 const battlesFilterByManacap = async (mana, ruleset) => {
     const history = await getBattlesWithRuleset(ruleset);
-    return history.filter(
+    if (history) {
+        return history.filter(
+            battle =>
+                battle.mana_cap == mana &&
+                (ruleset ? battle.ruleset === ruleset : true)
+        )
+    }
+    return historyBackup.filter(
         battle =>
             battle.mana_cap == mana &&
             (ruleset ? battle.ruleset === ruleset : true)
@@ -62,22 +69,23 @@ const battlesFilterByManacap = async (mana, ruleset) => {
 }
 
 const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterByManacap(mana, ruleset, splinters)
-    .then(x => {return x.map(
-        (x) => {
-            return [
-                x.summoner_id ? parseInt(x.summoner_id ) : '',
-                x.monster_1_id ? parseInt(x.monster_1_id ) : '',
-                x.monster_2_id ? parseInt(x.monster_2_id ) : '',
-                x.monster_3_id ? parseInt(x.monster_3_id ) : '',
-                x.monster_4_id ? parseInt(x.monster_4_id ) : '',
-                x.monster_5_id ? parseInt(x.monster_5_id ) : '',
-                x.monster_6_id ? parseInt(x.monster_6_id ) : '',
-                summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
-            ]
-        }
-    ).filter(
-        team => splinters.includes(team[7])
-    )
+    .then(x => {
+        return x.map(
+            (x) => {
+                return [
+                    x.summoner_id ? parseInt(x.summoner_id) : '',
+                    x.monster_1_id ? parseInt(x.monster_1_id) : '',
+                    x.monster_2_id ? parseInt(x.monster_2_id) : '',
+                    x.monster_3_id ? parseInt(x.monster_3_id) : '',
+                    x.monster_4_id ? parseInt(x.monster_4_id) : '',
+                    x.monster_5_id ? parseInt(x.monster_5_id) : '',
+                    x.monster_6_id ? parseInt(x.monster_6_id) : '',
+                    summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
+                ]
+            }
+        ).filter(
+            team => splinters.includes(team[7])
+        )
     })
 
 
@@ -90,7 +98,7 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterBy
 const askFormation = function (matchDetails) {
     console.log('INPUT: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters)
     return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
-        .then(x=> x.filter(
+        .then(x => x.filter(
             x => availabilityCheck(matchDetails.myCards, x))
             .map(element => element)//cards.cardByIds(element)
         )
@@ -117,27 +125,33 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     if (bestCombination.summonerWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
         console.log('BEST TEAM', bestTeam)
-        if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase()) && helper.teamActualSplinterToPlay(helper.teamSplinterToPlay(bestTeam)) !== '')
-            if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
-                console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
-                const summoner = card.makeCardId(bestTeam[0].toString());
-                return [summoner, bestTeam];
-            }
+        const summoner = bestTeam[0].toString();
+        return [summoner, bestTeam];
+        // if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase()) && helper.teamActualSplinterToPlay(helper.teamSplinterToPlay(bestTeam)) !== '') {
+        //     if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
+        //         console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
+        //         const summoner = card.makeCardId(bestTeam[0].toString());
+        //         return [summoner, bestTeam];
+        //     }
+        // }
+
     }
 }
 
 const teamSelection = async (possibleTeams, matchDetails) => {
+    //SBLOCCARE QUI PER USARE BEST SUMMONER FUNCTION
     if (possibleTeams.length > 5) {
         //find best combination (most used)
-        const [summoner, bestTeam] = mostWinningSummonerTankCombo(possibleTeams, matchDetails);
-        if (summoner && bestTeam) {
-            return { summoner: summoner, cards: bestTeam };
+        const res = mostWinningSummonerTankCombo(possibleTeams, matchDetails);
+        if (res.summoner && res.bestTeam) {
+            return { summoner: res.summoner, cards: res.bestTeam };
         }
     }
 
     let i = 0;
     for (i = 0; i <= possibleTeams.length - 1; i++) {
-        if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '') {
+        //console.log('TESTTT', helper.teamActualSplinterToPlay(possibleTeams[i]), matchDetails.splinters.includes(helper.teamActualSplinterToPlay(possibleTeams[i]).toLowerCase()));
+        if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '' && matchDetails.splinters.includes(helper.teamActualSplinterToPlay(possibleTeams[i]).toLowerCase())) {
             console.log('SELECTED: ', possibleTeams[i]);
             const summoner = card.makeCardId(possibleTeams[i][0].toString());
             return { summoner: summoner, cards: possibleTeams[i] };

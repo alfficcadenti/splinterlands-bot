@@ -1,17 +1,19 @@
 async function login(page) {
     try {
         page.waitForSelector('#log_in_button > button').then(() => page.click('#log_in_button > button'))
-        await page.waitForSelector('#account')
+        await page.waitForSelector('#email')
             .then(() => page.waitFor(3000))
-            .then(() => page.focus('#account'))
-            .then(() => page.type('#account', process.env.ACCOUNT))
-            .then(() => page.focus('#key'))
-            .then(() => page.type('#key', process.env.PASSWORD))
-            .then(() => page.click('#btn_login'))
-            .then(() => page.waitFor(5000)
-                .then(() => page.waitForSelector('.modal-close-new', { timeout: 10000 }))
-                .then(() => page.click('.modal-close-new'))
-            )
+            .then(() => page.focus('#email'))
+            .then(() => page.type('#email', process.env.ACCOUNT))
+            .then(() => page.focus('#password'))
+            .then(() => page.type('#password', process.env.PASSWORD))
+
+            // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
+            .then(() => page.keyboard.press('Enter'))
+            .then(() => page.waitFor(5000))
+            .then(() => page.waitForSelector('.modal-close-new', { timeout: 10000 }))
+            .then(() => page.click('.modal-close-new'))
+
 
     } catch (e) {
         console.log('login error', e);
