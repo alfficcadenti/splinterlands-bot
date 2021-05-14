@@ -24,8 +24,11 @@ async function getBattleHistory(player = '', data = {}) {
 }
 
 users = [];
-player = 'berindon'
-const battles = getBattleHistory(player)
+// player = 'berindon'
+players = ['wizballer','derion','bajadera','proelite','black-sheep','splinterlands-ru','mongysalmon','michiel87','espni','rick-wamit','bluhat','tads','riverwind','babalor','cryptoninjaz','maria-dossantos','lechatsplinter','sfarinari','andrea97','duckiemyfriend','ziggysd','aubryd','oksanastar','blazen70','mirri','dexy50','miloshpro','gioruspa','aleland','semi-lazy','maynard69','freeztag','nynate','rumsign','furenze','etal','russlynbott','opdi','lupee','brando28','ornu','captain87jack','ouroloki','neophyte_18704','amaari','imat','eco-worrier','savvyplayer','ajosetk','damob','clast','so1u0ki','claster','punjo','crewli','immortal8000','darscol','preczard','ibert','putonarager','javier42','dogtha','secretbot','techka','magma-catto','stanef','espo','mahimrafu','glovan','teser','iamyourfather','mezcmist','rimond','lkdrc','banshee1975','xeraphim','abbud','invcble','poncya','yeman','beachinist','lonta','sm-lvl1','flame-catto','tedge','scottishwildcat','abfus','erbu','sanches91','tayler','fromal','jimmyjimmy2','fistrhin','ealla','devi-rc','lerkfrend','zaahor','vadimfil1998','italma','bhuriben']
+players.forEach(function(player) {
+    
+    getBattleHistory(player)
     .then(battles => battles.map(
         x => {
             const details = JSON.parse(x.details);
@@ -56,7 +59,7 @@ const battles = getBattleHistory(player)
         })
     ).then(
         x => {
-            fs.writeFile(`data/${player}_Raw.json`, JSON.stringify(x), function (err) {
+            fs.writeFile(`data/playerdata/${player}_Raw.json`, JSON.stringify(x), function (err) {
                 if (err) {
                     console.log(err);
                 }
@@ -69,3 +72,5 @@ const battles = getBattleHistory(player)
             console.log(users.filter(distinct))
         }
     )
+    
+});
