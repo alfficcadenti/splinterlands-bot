@@ -19,14 +19,14 @@ async function startBotPlayMatch(browser) {
         deviceScaleFactor: 1,
     });
 
-    await page.goto('https://splinterlands.io/');
-    await page.waitFor(4000);
+    await page.goto('https://splinterlands.io/', {timeout: 0});
+    await page.waitForTimeout(4000);
     await splinterlandsPage.login(page);
-    await page.waitFor(5000);
+    await page.waitForTimeout(5000);
     await page.reload();
-    await page.waitFor(5000);
+    await page.waitForTimeout(5000);
     await page.reload();
-    await page.waitFor(5000);
+    await page.waitForTimeout(5000);
 
     await page.click('#menu_item_battle');
 
@@ -42,12 +42,12 @@ async function startBotPlayMatch(browser) {
         console.log('no quest reward')
     }
 
-    await page.waitFor(3000);
+    await page.waitForTimeout(3000);
 
     // LAUNCH the battle
     await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 10000 })
         .then(button => button.click());
-    await page.waitFor(30000);
+    await page.waitForTimeout(30000);
 
     await page.waitForSelector('.btn--create-team', { timeout: 90000 })
     let [mana, rules, splinters] = await Promise.all([
@@ -89,42 +89,45 @@ async function startBotPlayMatch(browser) {
     // }
 
     // //TO UNCOMMENT FOR QUEST after choose the color
-    // if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
-    //     const fireTeam = possibleTeams.find(x => x[7] === 'fire')
-    //     try {
-    //         if (matchDetails.splinters.includes(helper.teamSplinterToPlay(fireTeam).toLowerCase())) {
-    //             console.log('PLAY fire: ', helper.teamSplinterToPlay(fireTeam), fireTeam)
-    //             const summoner = card.makeCardId(fireTeam[0].toString());
-    //             return [summoner, fireTeam];
-    //         }
-    //         //console.log('fire but deck not active')
+    if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
+        const fireTeam = possibleTeams.find(x => x[7] === 'fire')
+        try {
+            if (matchDetails.splinters.includes(helper.teamSplinterToPlay(fireTeam).toLowerCase())) {
+                console.log('PLAY fire: ', helper.teamSplinterToPlay(fireTeam), fireTeam)
+                const summoner = card.makeCardId(fireTeam[0].toString());
+                return [summoner, fireTeam];
+            }
+            //console.log('fire but deck not active')
 
-    //     } catch (e) {
-    //         console.log('fire DECK ERROR: ', e)
-    //     }
-    // }
+        } catch (e) {
+            console.log('fire DECK ERROR: ', e)
+        }
+    }
+
+    // End of Quest Portion
+
     if (teamToPlay) {
         page.click('.btn--create-team')[0];
     } else {
         throw new Error('Team Selection error');
     }
-    await page.waitFor(5000);
+    await page.waitForTimeout(5000);
     try {
         await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 3000 }).then(summonerButton => summonerButton.click());
         if (card.color(teamToPlay.cards[0]) === 'Gold') {
             console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(teamToPlay.cards))
             await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards)}"]`, { timeout: 8000 }).then(selector => selector.click())
         }
-        await page.waitFor(5000);
+        await page.waitForTimeout(5000);
         for (i = 1; i <= 6; i++) {
             console.log('play: ', teamToPlay.cards[i].toString())
             await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 }).then(selector => selector.click()) : console.log('nocard ', i);
-            await page.waitFor(1000);
+            await page.waitForTimeout(1000);
         }
 
-        await page.waitFor(5000);
+        await page.waitForTimeout(5000);
         await page.click('.btn-green')[0]; //start fight
-        await page.waitFor(240000);
+        await page.waitForTimeout(6000);
         await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);
@@ -135,8 +138,9 @@ async function startBotPlayMatch(browser) {
 
 }
 
-cron.schedule('*/15 * * * *', async () => {
-    const browser = await puppeteer.launch({ headless: false });
+cron.schedule('*/7 * * * *', async () => {
+    const browser = await puppeteer.launch();
+    // const browser = await puppeteer.launch({ headless: false , timeout: 60000 });
     try {
         await startBotPlayMatch(browser);
         await browser.close();
@@ -147,7 +151,7 @@ cron.schedule('*/15 * * * *', async () => {
     }
 });
 
-// puppeteer.launch({ headless: false })
+// puppeteer.launch()
 //     .then(async browser => startBotPlayMatch(browser)
 //         .then(() => browser.close())
 //         .catch((e) => console.log('Error: ', e))

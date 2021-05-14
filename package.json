@@ -15,13 +15,8 @@
     "hierarchical-clustering": "^1.1.0",
     "minimist": ">=0.2.1",
     "node-cron": "^2.0.3",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^2.6.1",
     "pg": "^8.0.3",
-<<<<<<< HEAD
-    "puppeteer": "^2.1.1"
-=======
-    "puppeteer": "^2.1.1",
-    "minimist": ">=1.2.3"
->>>>>>> ad56a3a8c469f49ccb88a7656245efe54ae43f9e
+    "puppeteer": "^8.0.0"
   }
 }
