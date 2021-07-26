@@ -11,6 +11,8 @@ async function login(page) {
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
             .then(() => page.keyboard.press('Enter'))
             .then(() => page.waitFor(5000))
+            .then(() => page.reload())
+            .then(() => page.waitFor(3000))
             .then(() => page.waitForSelector('.modal-close-new', { timeout: 10000 }))
             .then(() => page.click('.modal-close-new'))
 
