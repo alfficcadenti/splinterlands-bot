@@ -47,7 +47,7 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.i
 
 const getBattlesWithRuleset = (ruleset, mana) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
-    return fetch(`https://splinterlands-data-service.herokuapp.com/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}`)
+    return fetch(`https://splinterlands-data-service.herokuapp.com/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`)
         .then(x => x && x.json())
         .then(data => data)
         .catch((e) => console.log('fetch ', e))
