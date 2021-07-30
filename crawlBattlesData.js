@@ -9,13 +9,13 @@ async function login(page) {
 
         page.waitForSelector('#log_in_button > button').then(() => page.click('#log_in_button > button'))
         await page.waitForSelector('#account')
-            .then(() => page.waitFor(1000))
+            .then(() => page.waitForTimeout(1000))
             .then(() => page.focus('#account'))
             .then(() => page.type('#account', 'a1492dc@gmail.com', {delay: 100}))
             .then(() => page.focus('#key'))
             .then(() => page.type('#key', '', {delay: 100}))
             .then(() => page.click('#btn_login'))
-            .then(() => page.waitFor(2000)
+            .then(() => page.waitForTimeout(2000)
             .then(() => page.waitForSelector('.modal-close-new')))
             .then(() => page.click('.modal-close-new'))
     } catch (e) {
@@ -45,9 +45,9 @@ async function openSplinter() {
       });
 
     await page.goto('https://splinterlands.io/?p=battle_history');
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     await login(page)
-    await page.waitFor(2000);
+    await page.waitForTimeout(2000);
     const [button] = await page.$x("//button[contains(., 'BATTLE LOG')]");
     button ? await button.click() : null;
 

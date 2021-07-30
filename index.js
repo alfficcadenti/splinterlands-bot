@@ -135,20 +135,20 @@ async function startBotPlayMatch(browser) {
 
 }
 
-cron.schedule('*/15 * * * *', async () => {
-    const browser = await puppeteer.launch({ headless: false });
-    try {
-        await startBotPlayMatch(browser);
-        await browser.close();
-    }
-    catch (e) {
-        console.log('END Error: ', e);
-        await browser.close();
-    }
-});
+// cron.schedule('*/15 * * * *', async () => {
+//     const browser = await puppeteer.launch({ headless: false });
+//     try {
+//         await startBotPlayMatch(browser);
+//         await browser.close();
+//     }
+//     catch (e) {
+//         console.log('END Error: ', e);
+//         await browser.close();
+//     }
+// });
 
-// puppeteer.launch({ headless: false })
-//     .then(async browser => startBotPlayMatch(browser)
-//         .then(() => browser.close())
-//         .catch((e) => console.log('Error: ', e))
-//     )
+puppeteer.launch({ headless: false })
+    .then(async browser => startBotPlayMatch(browser)
+        .then(() => browser.close())
+        .catch((e) => console.log('Error: ', e))
+    )
