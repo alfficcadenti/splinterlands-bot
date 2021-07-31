@@ -2,7 +2,7 @@ const fetch = require("node-fetch");
 const { Pool } = require('pg')
 
 async function getPlayerBattlesHistory(player = '') {
-    return await fetch('https://api.steemmonsters.io/battle/history?player=' + player + '&v=1582143214911&token=5C9VPKBVV4&username=a1492dc')
+    return await fetch('https://api.steemmonsters.io/battle/history?player=' + player + '&v=1582143214911&token=5C9VPKBVV4&username=' + process.env.ACCOUNT.split('@')[0])
         .then((response) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
@@ -107,7 +107,7 @@ const makeInsertQuery = (battleDetails) => "INSERT INTO battles (summoner_id, su
 
 async function writeDB() {
     await pool.connect();
-    await getPlayerBattlesHistory('a1492dc')
+    await getPlayerBattlesHistory(process.env.ACCOUNT.split('@')[0])
         .then((result) => {
             console.log('TOTAL ROWS: ', result.length)
             result.map(
