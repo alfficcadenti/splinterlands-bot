@@ -1,12 +1,13 @@
 # splinterlands-bot
 
 This is my personal project of a BOT to play the game [Splinterlands](https://www.splinterlands.com)
+I've created using my personal free time. If you like it or benefit from it and would like to offer me a beer, send me some DEC into the game to the player **splinterlava** or send me some Ethereum @ 0x8FA3414DC2a2F886e303421D07bda5Ef45C84A3b cheers!
 
 ## index.js
 
 run `npm start`
 
-to start BOT login routine. username and password needs to be specified in the file .env in the root as variable like:
+to start BOT login routine. username and password needs to be specified in the file .env (file with no name, only starting dot to create a hidden file) in the root as variable like:
 
 - `ACCOUNT=youremail@email.com`
 - `PASSWORD=yourpassword`

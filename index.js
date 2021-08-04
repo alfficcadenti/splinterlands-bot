@@ -135,7 +135,7 @@ async function startBotPlayMatch(browser) {
 
 
 }
-
+//COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
 cron.schedule('*/20 * * * *', async () => {
     const browser = await puppeteer.launch({ headless: false });
     try {
@@ -148,6 +148,7 @@ cron.schedule('*/20 * * * *', async () => {
     }
 });
 
+//COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
 // puppeteer.launch({ headless: true})
 //     .then(async browser => startBotPlayMatch(browser)
 //         .then(() => browser.close())
