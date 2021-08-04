@@ -13,9 +13,10 @@ const ask = require('./possibleTeams');
 
 async function startBotPlayMatch(browser) {
     const page = await browser.newPage();
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     await page.setViewport({
-        width: 1500,
-        height: 800,
+        width: 1800,
+        height: 1500,
         deviceScaleFactor: 1,
     });
 
@@ -135,7 +136,7 @@ async function startBotPlayMatch(browser) {
 
 }
 
-cron.schedule('*/15 * * * *', async () => {
+cron.schedule('*/20 * * * *', async () => {
     const browser = await puppeteer.launch({ headless: false });
     try {
         await startBotPlayMatch(browser);
@@ -147,7 +148,7 @@ cron.schedule('*/15 * * * *', async () => {
     }
 });
 
-// puppeteer.launch({ headless: false })
+// puppeteer.launch({ headless: true})
 //     .then(async browser => startBotPlayMatch(browser)
 //         .then(() => browser.close())
 //         .catch((e) => console.log('Error: ', e))
