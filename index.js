@@ -11,8 +11,15 @@ const helper = require('./helper');
 
 const ask = require('./possibleTeams');
 
-async function startBotPlayMatch(browser) {
+// LOAD MY CARDS
+async function getCards() {
+    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0])
+    return myCards;
+} 
+
+async function startBotPlayMatch(browser, myCards) {
     const page = await browser.newPage();
+    console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     await page.setViewport({
         width: 1800,
@@ -30,10 +37,6 @@ async function startBotPlayMatch(browser) {
     await page.waitForTimeout(5000);
 
     await page.click('#menu_item_battle');
-
-    // LOAD MY CARDS
-    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0])
-    console.log(process.env.ACCOUNT)
 
     //if quest done claim reward
     try {
@@ -135,11 +138,13 @@ async function startBotPlayMatch(browser) {
 
 
 }
+
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
 cron.schedule('*/20 * * * *', async () => {
-    const browser = await puppeteer.launch({ headless: false });
+    const myCards = await getCards();
+    const browser = await puppeteer.launch({ headless: true });
     try {
-        await startBotPlayMatch(browser);
+        await startBotPlayMatch(browser, myCards);
         await browser.close();
     }
     catch (e) {
@@ -150,7 +155,9 @@ cron.schedule('*/20 * * * *', async () => {
 
 //COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
 // puppeteer.launch({ headless: true})
-//     .then(async browser => startBotPlayMatch(browser)
+//     .then(async browser => {
+//         const myCards = await getCards(); 
+//         startBotPlayMatch(browser, myCards)
 //         .then(() => browser.close())
-//         .catch((e) => console.log('Error: ', e))
+//         .catch((e) => console.log('Error: ', e))}
 //     )
