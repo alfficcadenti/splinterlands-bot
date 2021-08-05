@@ -1,6 +1,6 @@
 # splinterlands-bot
 
-This is my personal project of a BOT to play the game [Splinterlands](https://www.splinterlands.com)
+This is my personal project of a BOT to play the game [Splinterlands](https://www.splinterlands.com). It requires [NodeJs](https://nodejs.org/it/download/) installed to run.
 
 
 ## index.js
@@ -12,7 +12,7 @@ to start BOT login routine. username and password needs to be specified in the f
 - `ACCOUNT=youremail@email.com`
 - `PASSWORD=yourpassword`
 
-run `npm start`
+run `node index.js`
 
 
 ## battleGetData.js
@@ -39,4 +39,6 @@ I've created using my personal free time so if you like it or you benefit from i
 - Ethereum 0x8FA3414DC2a2F886e303421D07bda5Ef45C84A3b 
 - Tron TRNjqiovkkfxVSSpHSfGPQoGby1FgvcSaY
 
-cheers!
+Cheers!
+
+[Telegram chat](https://t.me/splinterlandsbot) where you can find some support from other people using it
