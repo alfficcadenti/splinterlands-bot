@@ -9,15 +9,15 @@ run `npm install`
 
 to start BOT login routine. username and password needs to be specified in the file .env (file with no name, only starting dot to create a hidden file) in the root as variable like:
 
-- `ACCOUNT=youremail@email.com`
-- `PASSWORD=yourpassword`
+- `ACCOUNT=youraccountname`
+- `PASSWORD=yourpostingpassword`
 
 run `npm start`
 
 
-## battleGetData.js
+## battlesGetData.js
 
-[ OPTIONAL ] run `node battleGetData.js`
+[ OPTIONAL ] run `node battlesGetData.js`
 
 The BOT leverage an API but in case doesn't work, it is possible to have locally an history as a backup.
 To generate the file 'history.json' with a unique array with the history of the battles of an array of users (to be specified in the file).

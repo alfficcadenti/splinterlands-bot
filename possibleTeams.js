@@ -33,21 +33,24 @@ const summoners = [{ 224: 'dragon' },
 { 113: '' },
 { 73: 'life' }]
 
+const splinters = ['fire', 'earth', 'water', 'death', 'dragon']
+
 const summonerColor = (id) => {
     const summonerDetails = summoners.find(x => x[id]);
     return summonerDetails ? summonerDetails[id] : '';
 }
 
 const historyBackup = require("./data/newHistory.json");
-//const myCards = require('./data/myCards.js');
-const myCards = require('./data/splinterlavaCards.js');
+const basicCards = require('./data/basicCards.js');
 
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
 
 const getBattlesWithRuleset = (ruleset, mana) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
-    return fetch(`https://splinterlands-data-service.herokuapp.com/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`)
+    const url = `https://splinterlands-data-service.herokuapp.com/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
+    console.log('API call: ', url)
+    return fetch(url)
         .then(x => x && x.json())
         .then(data => data)
         .catch((e) => console.log('fetch ', e))
@@ -56,12 +59,17 @@ const getBattlesWithRuleset = (ruleset, mana) => {
 const battlesFilterByManacap = async (mana, ruleset) => {
     const history = await getBattlesWithRuleset(ruleset, mana);
     if (history) {
+        console.log('API battles returned ', history.length)
         return history.filter(
             battle =>
                 battle.mana_cap == mana &&
                 (ruleset ? battle.ruleset === ruleset : true)
         )
     }
+    const backupLength = historyBackup && historyBackup.length
+    console.log('API battles did not return ', history)
+    console.log('Using Backup ', backupLength)
+    
     return historyBackup.filter(
         battle =>
             battle.mana_cap == mana &&
@@ -89,26 +97,18 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterBy
         )
     })
 
-
-
-//for (i=13; i<100; i++) {
-
-// const manaCap = 22;
-// const inactive = ['White']
-
 const askFormation = function (matchDetails) {
-    console.log('INPUT: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters)
+    const cards = matchDetails.myCards || basicCards;
+    console.log('INPUT: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters, cards.length)
     return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
         .then(x => x.filter(
-            x => availabilityCheck(matchDetails.myCards, x))
+            x => availabilityCheck(cards, x))
             .map(element => element)//cards.cardByIds(element)
         )
 
 }
 
 const possibleTeams = async (matchDetails) => {
-    // const res = await getBattlesWithRuleset(matchDetails.rules);
-    // console.log(res);
     let possibleTeams = [];
     while (matchDetails.mana > 0) {
         possibleTeams = await askFormation(matchDetails)
@@ -123,31 +123,31 @@ const possibleTeams = async (matchDetails) => {
 const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     const bestCombination = await battles.mostWinningSummonerTank(possibleTeams)
     console.log('BEST SUMMONER and TANK', bestCombination)
-    if (bestCombination.summonerWins > 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1 && bestCombination.thirdBacklineWins > 1 && bestCombination.forthBacklineWins > 1) {
+    if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1 && bestCombination.thirdBacklineWins > 1 && bestCombination.forthBacklineWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank && x[2] == bestCombination.bestBackline && x[3] == bestCombination.bestSecondBackline && x[4] == bestCombination.bestThirdBackline && x[5] == bestCombination.bestForthBackline)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
     }
-    if (bestCombination.summonerWins > 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1 && bestCombination.thirdBacklineWins > 1) {
+    if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1 && bestCombination.thirdBacklineWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank && x[2] == bestCombination.bestBackline && x[3] == bestCombination.bestSecondBackline && x[4] == bestCombination.bestThirdBackline)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
     }
-    if (bestCombination.summonerWins > 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1) {
+    if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank && x[2] == bestCombination.bestBackline && x[3] == bestCombination.bestSecondBackline)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
     }
-    if (bestCombination.summonerWins > 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1) {
+    if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank && x[2] == bestCombination.bestBackline)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
     }
-    if (bestCombination.summonerWins > 1 && bestCombination.tankWins > 1) {
+    if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
@@ -158,19 +158,29 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
-        // if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase()) && helper.teamActualSplinterToPlay(helper.teamSplinterToPlay(bestTeam)) !== '') {
-        //     if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
-        //         console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
-        //         const summoner = card.makeCardId(bestTeam[0].toString());
-        //         return [summoner, bestTeam];
-        //     }
-        // }
-
     }
 }
 
-const teamSelection = async (possibleTeams, matchDetails) => {
+const teamSelection = async (possibleTeams, matchDetails, quest) => {
     if (possibleTeams.length > 5) {
+        //check if daily quest is not completed
+        if(quest && quest.total && quest.completed) {
+            const left = quest.total - quest.completed;
+            const questCheck = matchDetails.splinters.includes(quest.splinter);
+            console.log(questCheck, quest.splinter)
+            console.log(left + ' battles left for the '+quest.splinter+' quest')
+            if(left > 0 && splinters.includes(quest.splinter)) {
+                console.log('PLAY for the quest')
+                const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
+                const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
+                console.log('PlayThis', res)
+                if (res[0] && res[1]) {
+                    return { summoner: res[0], cards: res[1] };
+                }
+            }
+        }
+        
+
         //find best combination (most used)
         const res = await mostWinningSummonerTankCombo(possibleTeams, matchDetails);
         console.log('PlayThis', res)
