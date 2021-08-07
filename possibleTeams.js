@@ -165,7 +165,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
     if (possibleTeams.length > 5) {
         //check if daily quest is not completed
-        if(quest && quest.total && quest.completed) {
+        if(quest && quest.total) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter);
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
