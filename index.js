@@ -139,27 +139,27 @@ async function startBotPlayMatch(browser, myCards, quest) {
 }
 
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
-// cron.schedule('*/30 * * * *', async () => {
-//     const myCards = await getCards();
-//     const quest = await getQuest();
-//     console.log('here',quest)
-//     const browser = await puppeteer.launch({ headless: true });
-//     try {
-//         await startBotPlayMatch(browser, myCards, quest);
-//         await browser.close();
-//     }
-//     catch (e) {
-//         console.log('END Error: ', e);
-//         await browser.close();
-//     }
-// });
+cron.schedule('*/20 * * * *', async () => {
+    const myCards = await getCards();
+    const quest = await getQuest();
+    console.log('here',quest)
+    const browser = await puppeteer.launch({ headless: true });
+    try {
+        await startBotPlayMatch(browser, myCards, quest);
+        await browser.close();
+    }
+    catch (e) {
+        console.log('END Error: ', e);
+        await browser.close();
+    }
+});
 
 //COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
-puppeteer.launch({ headless: false})
-    .then(async browser => {
-        const myCards = await getCards(); 
-        const quest = await getQuest();
-        startBotPlayMatch(browser, myCards, quest)
-        .then(() => browser.close())
-        .catch((e) => console.log('Error: ', e))}
-    )
+// puppeteer.launch({ headless: false})
+//     .then(async browser => {
+//         const myCards = await getCards(); 
+//         const quest = await getQuest();
+//         startBotPlayMatch(browser, myCards, quest)
+//         .then(() => browser.close())
+//         .catch((e) => console.log('Error: ', e))}
+//     )
