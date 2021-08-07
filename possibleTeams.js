@@ -48,9 +48,11 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.i
 
 const getBattlesWithRuleset = (ruleset, mana) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
-    const url = `https://splinterlands-data-service.herokuapp.com/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
-    console.log('API call: ', url)
-    return fetch(url)
+    const host = 'https://splinterlands-data-service.herokuapp.com/'
+    //const host = 'http://localhost:4000/'
+    const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
+    console.log('API call: ', host+url)
+    return fetch(host+url)
         .then(x => x && x.json())
         .then(data => data)
         .catch((e) => console.log('fetch ', e))
@@ -163,16 +165,16 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 }
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
-    if (possibleTeams.length > 5) {
+    if (possibleTeams.length > 25) {
         //check if daily quest is not completed
         if(quest && quest.total) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter);
+            const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
-            if(left > 0 && splinters.includes(quest.splinter)) {
+            if(left > 0 && filteredTeams && splinters.includes(quest.splinter)) {
                 console.log('PLAY for the quest')
-                const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
                 const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
                 console.log('PlayThis', res)
                 if (res[0] && res[1]) {
