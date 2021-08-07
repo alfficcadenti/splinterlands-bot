@@ -8,7 +8,7 @@ const user = require('./user');
 const cardsDetails = require("./data/cardsDetails.json"); //saved json from api endpoint https://game-api.splinterlands.com/cards/get_details?
 const card = require('./cards');
 const helper = require('./helper');
-
+const quests = require('./quests');
 const ask = require('./possibleTeams');
 
 // LOAD MY CARDS
@@ -17,7 +17,13 @@ async function getCards() {
     return myCards;
 } 
 
-async function startBotPlayMatch(browser, myCards) {
+async function getQuest() {
+    return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
+        .then(x=>x)
+        .catch(e=>console.log('No quest data'))
+}
+
+async function startBotPlayMatch(browser, myCards, quest) {
     const page = await browser.newPage();
     console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
@@ -43,17 +49,29 @@ async function startBotPlayMatch(browser, myCards) {
         await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
             .then(button => button.click());
     } catch (e) {
-        console.log('no quest reward')
+        console.log('no quest reward to be claimed')
     }
 
     await page.waitForTimeout(3000);
 
     // LAUNCH the battle
-    await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 10000 })
-        .then(button => button.click());
-    await page.waitForTimeout(30000);
+    await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+        .then(button => button.click())
+        .catch(e=>console.log('[ERROR waiting for Battle button]'));
+    await page.waitForTimeout(15000);
 
-    await page.waitForSelector('.btn--create-team', { timeout: 90000 })
+    await page.waitForSelector('.btn--create-team', { timeout: 240000 })
+        .catch(async e=> {
+            console.log('[Error while waiting for battle]',e);
+            // refresh the page and retry to battle
+            await page.reload();
+            await page.waitForTimeout(3000);
+            await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 10000 })
+                .then(button => button.click());
+            await page.waitForTimeout(5000);
+            await page.waitForSelector('.btn--create-team', { timeout: 90000 })
+        })
+    await page.waitForTimeout(10000);
     let [mana, rules, splinters] = await Promise.all([
         splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
         splinterlandsPage.checkMatchRules(page).then((rulesArray) => rulesArray).catch(() => 'no rules'),
@@ -66,47 +84,23 @@ async function startBotPlayMatch(browser, myCards) {
         splinters: splinters,
         myCards: myCards
     }
-
+    await page.waitForTimeout(2000);
     const possibleTeams = await ask.possibleTeams(matchDetails);
 
     if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
     } else {
+        console.log('Error:', matchDetails, possibleTeams)
         //page.click('.btn--surrender')[0]; //commented to prevent alert dialog
         await browser.close();
         throw new Error('NO TEAMS available to be played');
     }
 
     //TEAM SELECTION
-    const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails);
-    // const bestCombination = battles.mostWinningSummonerTank(possibleTeams)
-    // console.log('BEST SUMMONER and TANK', bestCombination)
-    // if (bestCombination.summonerWins > 1) {
-    //     const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
-    //     console.log('BEST TEAM', bestTeam)
-    //     if (matchDetails.splinters.includes(helper.teamSplinterToPlay(bestTeam).toLowerCase())) {
-    //         console.log('PLAY BEST SUMMONER and TANK: ', helper.teamSplinterToPlay(bestTeam), bestTeam)
-    //         const summoner = card.makeCardId(bestTeam[0].toString());
-    //         return [summoner, bestTeam];
-    //     }
+    console.log('Quest: ', quest);
 
-    // }
+    const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest);
 
-    // //TO UNCOMMENT FOR QUEST after choose the color
-    // if (matchDetails.splinters.includes('fire') && possibleTeams.find(x => x[7] === 'fire')) {
-    //     const fireTeam = possibleTeams.find(x => x[7] === 'fire')
-    //     try {
-    //         if (matchDetails.splinters.includes(helper.teamSplinterToPlay(fireTeam).toLowerCase())) {
-    //             console.log('PLAY fire: ', helper.teamSplinterToPlay(fireTeam), fireTeam)
-    //             const summoner = card.makeCardId(fireTeam[0].toString());
-    //             return [summoner, fireTeam];
-    //         }
-    //         //console.log('fire but deck not active')
-
-    //     } catch (e) {
-    //         console.log('fire DECK ERROR: ', e)
-    //     }
-    // }
     if (teamToPlay) {
         page.click('.btn--create-team')[0];
     } else {
@@ -128,7 +122,12 @@ async function startBotPlayMatch(browser, myCards) {
 
         await page.waitForTimeout(5000);
         await page.click('.btn-green')[0]; //start fight
-        await page.waitForTimeout(240000);
+        await page.waitForSelector('#btnRumble', { timeout: 240000 })
+        await page.waitForTimeout(5000);
+        await page.$eval('#btnRumble', elem => elem.click()); //start rumble
+        await page.waitForSelector('#btnSkip', { timeout: 10000 })
+        await page.$eval('#btnSkip', elem => elem.click()); //skip rumble
+        await page.waitForTimeout(15000);
         await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);
@@ -142,9 +141,11 @@ async function startBotPlayMatch(browser, myCards) {
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
 cron.schedule('*/20 * * * *', async () => {
     const myCards = await getCards();
+    const quest = await getQuest();
+    console.log('here',quest)
     const browser = await puppeteer.launch({ headless: true });
     try {
-        await startBotPlayMatch(browser, myCards);
+        await startBotPlayMatch(browser, myCards, quest);
         await browser.close();
     }
     catch (e) {
@@ -154,10 +155,11 @@ cron.schedule('*/20 * * * *', async () => {
 });
 
 //COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
-// puppeteer.launch({ headless: true})
+// puppeteer.launch({ headless: false})
 //     .then(async browser => {
 //         const myCards = await getCards(); 
-//         startBotPlayMatch(browser, myCards)
+//         const quest = await getQuest();
+//         startBotPlayMatch(browser, myCards, quest)
 //         .then(() => browser.close())
 //         .catch((e) => console.log('Error: ', e))}
 //     )
