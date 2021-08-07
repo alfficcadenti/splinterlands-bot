@@ -90,6 +90,7 @@ async function startBotPlayMatch(browser, myCards, quest) {
     if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
     } else {
+        console.log('Error:', matchDetails, possibleTeams)
         //page.click('.btn--surrender')[0]; //commented to prevent alert dialog
         await browser.close();
         throw new Error('NO TEAMS available to be played');
@@ -123,10 +124,10 @@ async function startBotPlayMatch(browser, myCards, quest) {
         await page.click('.btn-green')[0]; //start fight
         await page.waitForSelector('#btnRumble', { timeout: 240000 })
         await page.waitForTimeout(5000);
-        await page.waitForSelector('#btnSkip', { timeout: 5000 })
+        await page.$eval('#btnRumble', elem => elem.click()); //start rumble
+        await page.waitForSelector('#btnSkip', { timeout: 10000 })
+        await page.$eval('#btnSkip', elem => elem.click()); //skip rumble
         await page.waitForTimeout(15000);
-        await page.reload();
-        await page.waitForTimeout(5000);
         await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);
@@ -138,27 +139,27 @@ async function startBotPlayMatch(browser, myCards, quest) {
 }
 
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
-cron.schedule('*/20 * * * *', async () => {
-    const myCards = await getCards();
-    const quest = await getQuest();
-    console.log('here',quest)
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-        await startBotPlayMatch(browser, myCards, quest);
-        await browser.close();
-    }
-    catch (e) {
-        console.log('END Error: ', e);
-        await browser.close();
-    }
-});
+// cron.schedule('*/30 * * * *', async () => {
+//     const myCards = await getCards();
+//     const quest = await getQuest();
+//     console.log('here',quest)
+//     const browser = await puppeteer.launch({ headless: true });
+//     try {
+//         await startBotPlayMatch(browser, myCards, quest);
+//         await browser.close();
+//     }
+//     catch (e) {
+//         console.log('END Error: ', e);
+//         await browser.close();
+//     }
+// });
 
 //COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
-// puppeteer.launch({ headless: false})
-//     .then(async browser => {
-//         const myCards = await getCards(); 
-//         const quest = await getQuest();
-//         startBotPlayMatch(browser, myCards, quest)
-//         .then(() => browser.close())
-//         .catch((e) => console.log('Error: ', e))}
-//     )
+puppeteer.launch({ headless: false})
+    .then(async browser => {
+        const myCards = await getCards(); 
+        const quest = await getQuest();
+        startBotPlayMatch(browser, myCards, quest)
+        .then(() => browser.close())
+        .catch((e) => console.log('Error: ', e))}
+    )

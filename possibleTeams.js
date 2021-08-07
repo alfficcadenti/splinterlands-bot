@@ -168,7 +168,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         if(quest && quest.total && quest.completed) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter);
-            console.log(questCheck, quest.splinter)
+            console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
             if(left > 0 && splinters.includes(quest.splinter)) {
                 console.log('PLAY for the quest')

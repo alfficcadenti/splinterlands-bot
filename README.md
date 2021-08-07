@@ -38,5 +38,6 @@ I've created using my personal free time so if you like it or you benefit from i
 - Bitcoin bc1qpluvvtty822dsvfza4en9d3q3sl5yhj2qa2dtn
 - Ethereum 0x8FA3414DC2a2F886e303421D07bda5Ef45C84A3b 
 - Tron TRNjqiovkkfxVSSpHSfGPQoGby1FgvcSaY
+- BUSD(ERC20) 0xE4B06BE863fD9bcE1dA30433151662Ea0ecA4a7e
 
 cheers!
