@@ -156,7 +156,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
         const summoner = bestTeam[0].toString();
         return [summoner, bestTeam];
     }
-    if (bestCombination.summonerWins > 1) {
+    if (bestCombination.summonerWins >= 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner)
         console.log('BEST TEAM', bestTeam)
         const summoner = bestTeam[0].toString();
@@ -165,9 +165,8 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 }
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
-    if (possibleTeams.length > 25) {
         //check if daily quest is not completed
-        if(quest && quest.total) {
+        if(possibleTeams.length > 25 && quest && quest.total) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter);
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
@@ -181,8 +180,6 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
                     return { summoner: res[0], cards: res[1] };
                 }
             }
-        }
-        
 
         //find best combination (most used)
         const res = await mostWinningSummonerTankCombo(possibleTeams, matchDetails);

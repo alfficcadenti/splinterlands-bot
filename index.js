@@ -24,6 +24,8 @@ async function getQuest() {
 }
 
 async function startBotPlayMatch(browser, myCards, quest) {
+    
+    console.log( new Date().toLocaleString())
     const page = await browser.newPage();
     console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
@@ -139,10 +141,9 @@ async function startBotPlayMatch(browser, myCards, quest) {
 }
 
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
-cron.schedule('*/20 * * * *', async () => {
+cron.schedule('*/15 * * * *', async () => {
     const myCards = await getCards();
     const quest = await getQuest();
-    console.log('here',quest)
     const browser = await puppeteer.launch({ headless: true });
     try {
         await startBotPlayMatch(browser, myCards, quest);
