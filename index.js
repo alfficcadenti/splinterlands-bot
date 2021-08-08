@@ -130,6 +130,7 @@ async function startBotPlayMatch(browser, myCards, quest) {
         await page.waitForSelector('#btnSkip', { timeout: 10000 })
         await page.$eval('#btnSkip', elem => elem.click()); //skip rumble
         await page.waitForTimeout(15000);
+        console.log('Closing browser', new Date().toLocaleString())
         await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);

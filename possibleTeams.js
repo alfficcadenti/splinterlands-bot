@@ -33,7 +33,7 @@ const summoners = [{ 224: 'dragon' },
 { 113: '' },
 { 73: 'life' }]
 
-const splinters = ['fire', 'earth', 'water', 'death', 'dragon']
+const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
 
 const summonerColor = (id) => {
     const summonerDetails = summoners.find(x => x[id]);
@@ -174,6 +174,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
             console.log(left + ' battles left for the '+quest.splinter+' quest')
             if(left > 0 && filteredTeams && splinters.includes(quest.splinter)) {
                 console.log('PLAY for the quest')
+                console.log('Teams: ', filteredTeams.length , filteredTeams)
                 const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
                 console.log('PlayThis', res)
                 if (res[0] && res[1]) {
