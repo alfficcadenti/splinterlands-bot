@@ -141,7 +141,7 @@ async function startBotPlayMatch(browser, myCards, quest) {
 }
 
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
-cron.schedule('*/15 * * * *', async () => {
+cron.schedule('*/20 * * * *', async () => {
     const myCards = await getCards();
     const quest = await getQuest();
     const browser = await puppeteer.launch({ headless: true });
