@@ -15,22 +15,33 @@ const summoners = [{ 224: 'dragon' },
 { 71: 'water' },
 { 114: 'dragon' },
 { 178: 'water' },
-{ 110: '' },
+{ 110: 'fire' },
 { 49: 'death' },
 { 88: 'dragon' },
-{ 38: 'white' },
-{ 236: '' },
+{ 38: 'life' },
+{ 239: 'life' },
 { 74: 'death' },
-{ 200: '' },
-{ 70: '' },
-{ 109: '' },
-{ 111: '' },
-{ 130: '' },
-{ 72: '' },
-{ 112: '' },
-{ 235: '' },
-{ 56: '' },
-{ 113: '' },
+{ 78: 'dragon' },
+{ 260: 'fire' },
+{ 70: 'fire' },
+{ 109: 'death' },
+{ 111: 'water' },
+{ 112: 'earth' },
+{ 130: 'dragon' },
+{ 72: 'earth' },
+{ 235: 'dragon' },
+{ 56: 'dragon' },
+{ 113: 'life' },
+{ 200: 'dragon' },
+{ 236: 'fire' },
+{ 240: 'dragon' },
+{ 254: 'water' },
+{ 257: 'water' },
+{ 258: 'dragon' },
+{ 259: 'earth' },
+{ 261: 'life' },
+{ 262: 'dragon' },
+{ 278: 'earth' },
 { 73: 'life' }]
 
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
@@ -168,7 +179,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         //check if daily quest is not completed
         if(possibleTeams.length > 25 && quest && quest.total) {
             const left = quest.total - quest.completed;
-            const questCheck = matchDetails.splinters.includes(quest.splinter);
+            const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')

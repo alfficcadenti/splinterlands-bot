@@ -23,10 +23,10 @@ async function getQuest() {
         .catch(e=>console.log('No quest data'))
 }
 
-async function startBotPlayMatch(browser, myCards, quest) {
+async function startBotPlayMatch(page, myCards, quest) {
     
     console.log( new Date().toLocaleString())
-    const page = await browser.newPage();
+    //const page = await browser.newPage();
     console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     await page.setViewport({
@@ -37,7 +37,22 @@ async function startBotPlayMatch(browser, myCards, quest) {
 
     await page.goto('https://splinterlands.io/');
     await page.waitForTimeout(4000);
-    await splinterlandsPage.login(page);
+
+    //let item = await page.$('#log_in_button > button');
+
+    let item = await page.waitForSelector('#log_in_button > button', {
+        visible: true,
+      })
+      .then(res => res)
+      .catch(e=> console.log('Already logged in'))
+
+    if (item != undefined)
+    {console.log('here')
+    //console.log(item)
+        await splinterlandsPage.login(page);
+    }
+    else {console.log('Already IN')}
+    
     await page.waitForTimeout(5000);
     await page.reload();
     await page.waitForTimeout(5000);
@@ -94,7 +109,7 @@ async function startBotPlayMatch(browser, myCards, quest) {
     } else {
         console.log('Error:', matchDetails, possibleTeams)
         //page.click('.btn--surrender')[0]; //commented to prevent alert dialog
-        await browser.close();
+        //await browser.close();
         throw new Error('NO TEAMS available to be played');
     }
 
@@ -130,11 +145,11 @@ async function startBotPlayMatch(browser, myCards, quest) {
         await page.waitForSelector('#btnSkip', { timeout: 10000 })
         await page.$eval('#btnSkip', elem => elem.click()); //skip rumble
         await page.waitForTimeout(15000);
-        console.log('Closing browser', new Date().toLocaleString())
-        await browser.close();
+        await page.click('.btn--done')[0]; //start fight
+        //await browser.close();
     } catch (e) {
         console.log('Error in cards selection!', e);
-        await browser.close();
+        //await browser.close();
         throw new Error(e);
     }
 
@@ -142,26 +157,60 @@ async function startBotPlayMatch(browser, myCards, quest) {
 }
 
 //COMMENT/UNCOMMENT UNTIL LINE 149 TO STOP/USE CRON
-cron.schedule('*/20 * * * *', async () => {
-    const myCards = await getCards();
-    const quest = await getQuest();
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-        await startBotPlayMatch(browser, myCards, quest);
-        await browser.close();
-    }
-    catch (e) {
-        console.log('END Error: ', e);
-        await browser.close();
-    }
-});
+// cron.schedule('*/18 * * * *', async () => {
+//     const myCards = await getCards();
+//     const quest = await getQuest();
+//     const browser = await puppeteer.launch({ headless: true });
+//     try {
+//         await startBotPlayMatch(browser, myCards, quest);
+//         await browser.close();
+//     }
+//     catch (e) {
+//         console.log('END Error: ', e);
+//         await browser.close();
+//     }
+// });
 
 //COMMENT/UNCOMMENT UNTIL THE END TO STOP/USE HEADLESS MODE WITH NO CRON
+
+const sleepingTime = 60000;
+const sleepingTimeMinutes = sleepingTime / 1000 / 60;
 // puppeteer.launch({ headless: false})
-//     .then(async browser => {
-//         const myCards = await getCards(); 
-//         const quest = await getQuest();
-//         startBotPlayMatch(browser, myCards, quest)
-//         .then(() => browser.close())
-//         .catch((e) => console.log('Error: ', e))}
-//     )
+// .then(async browser => {
+//     const myCards = await getCards(); 
+//     const quest = await getQuest();
+//     await startBotPlayMatch(browser, myCards, quest)
+//         .then(() => {
+//             console.log('Closing browser', new Date().toLocaleString());        
+//         })
+//         .catch((e) => {
+//             console.log('Error: ', e)
+//         })
+//         .finally(()=>browser.close())
+//     await console.log('waiting for the next battle in ', sleepingTimeMinutes, ' minutes')
+//     await new Promise(r => setTimeout(r, 300000));
+// })
+
+(async () => {
+    const browser = await puppeteer.launch({
+        headless: false
+    }); // default is true
+    const page = await browser.newPage();
+
+    while (true) {
+        const myCards = await getCards(); 
+        const quest = await getQuest();
+        await startBotPlayMatch(page, myCards, quest)
+            .then(() => {
+                console.log('Closing browser', new Date().toLocaleString());        
+            })
+            .catch((e) => {
+                console.log('Error: ', e)
+            })
+            // .finally(()=>browser.close())
+        await console.log('waiting for the next battle in ', sleepingTimeMinutes, ' minutes')
+        await new Promise(r => setTimeout(r, sleepingTime));
+    }
+
+    await browser.close();
+})();
