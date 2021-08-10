@@ -53,6 +53,7 @@ const summonerColor = (id) => {
 
 const historyBackup = require("./data/newHistory.json");
 const basicCards = require('./data/basicCards.js');
+const { filter } = require('./data/basicCards.js');
 
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
@@ -183,7 +184,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
-            if(left > 0 && filteredTeams && splinters.includes(quest.splinter)) {
+            if(left > 0 && filteredTeams && filteredTeams.length > 5 && splinters.includes(quest.splinter)) {
                 console.log('PLAY for the quest')
                 console.log('Teams: ', filteredTeams.length , filteredTeams)
                 const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);

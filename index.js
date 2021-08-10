@@ -96,7 +96,7 @@ async function startBotPlayMatch(page, myCards, quest) {
         myCards: myCards
     }
     await page.waitForTimeout(2000);
-    const possibleTeams = await ask.possibleTeams(matchDetails);
+    const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team: ',e));
 
     if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
