@@ -15,22 +15,33 @@ const summoners = [{ 224: 'dragon' },
 { 71: 'water' },
 { 114: 'dragon' },
 { 178: 'water' },
-{ 110: '' },
+{ 110: 'fire' },
 { 49: 'death' },
 { 88: 'dragon' },
-{ 38: 'white' },
-{ 236: '' },
+{ 38: 'life' },
+{ 239: 'life' },
 { 74: 'death' },
-{ 200: '' },
-{ 70: '' },
-{ 109: '' },
-{ 111: '' },
-{ 130: '' },
-{ 72: '' },
-{ 112: '' },
-{ 235: '' },
-{ 56: '' },
-{ 113: '' },
+{ 78: 'dragon' },
+{ 260: 'fire' },
+{ 70: 'fire' },
+{ 109: 'death' },
+{ 111: 'water' },
+{ 112: 'earth' },
+{ 130: 'dragon' },
+{ 72: 'earth' },
+{ 235: 'dragon' },
+{ 56: 'dragon' },
+{ 113: 'life' },
+{ 200: 'dragon' },
+{ 236: 'fire' },
+{ 240: 'dragon' },
+{ 254: 'water' },
+{ 257: 'water' },
+{ 258: 'dragon' },
+{ 259: 'earth' },
+{ 261: 'life' },
+{ 262: 'dragon' },
+{ 278: 'earth' },
 { 73: 'life' }]
 
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
@@ -42,6 +53,7 @@ const summonerColor = (id) => {
 
 const historyBackup = require("./data/newHistory.json");
 const basicCards = require('./data/basicCards.js');
+const { filter } = require('./data/basicCards.js');
 
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
@@ -168,15 +180,14 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         //check if daily quest is not completed
         if(possibleTeams.length > 25 && quest && quest.total) {
             const left = quest.total - quest.completed;
-            const questCheck = matchDetails.splinters.includes(quest.splinter);
+            const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
-            console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
-            if(left > 0 && filteredTeams && splinters.includes(quest.splinter)) {
-                console.log('PLAY for the quest')
-                console.log('Teams: ', filteredTeams.length , filteredTeams)
+            console.log('play for the quest ',quest.splinter,'? ',questCheck)
+            if(left > 0 && filteredTeams && filteredTeams.length > 10 && splinters.includes(quest.splinter)) {
+                console.log('PLAY for the quest with Teams: ',filteredTeams.length , filteredTeams)
                 const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
-                console.log('PlayThis', res)
+                console.log('Play this for the quest:', res)
                 if (res[0] && res[1]) {
                     return { summoner: res[0], cards: res[1] };
                 }
@@ -184,7 +195,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
 
         //find best combination (most used)
         const res = await mostWinningSummonerTankCombo(possibleTeams, matchDetails);
-        console.log('PlayThis', res)
+        console.log('Dont play for the quest, and play this:', res)
         if (res[0] && res[1]) {
             return { summoner: res[0], cards: res[1] };
         }
@@ -193,13 +204,13 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
     let i = 0;
     for (i = 0; i <= possibleTeams.length - 1; i++) {
         if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '' && matchDetails.splinters.includes(helper.teamActualSplinterToPlay(possibleTeams[i]).toLowerCase())) {
-            console.log('SELECTED: ', possibleTeams[i]);
+            console.log('Less than 25 teams available. SELECTED: ', possibleTeams[i]);
             const summoner = card.makeCardId(possibleTeams[i][0].toString());
             return { summoner: summoner, cards: possibleTeams[i] };
         }
         console.log('DISCARDED: ', possibleTeams[i])
     }
-    throw new Error('NO TEAM available');
+    throw new Error('NO TEAM available to be played.');
 }
 
 

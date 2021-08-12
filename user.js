@@ -6,7 +6,7 @@ getPlayerCards = (username) => (fetch(`https://api.splinterlands.io/cards/collec
   .then(x => x.json())
   .then(x => x['cards'] ? x['cards'].map(card => card.card_detail_id) : '')
   .then(advanced => basicCards.concat(advanced))
-  .catch(e => console.log(e))
+  .catch(e => {console.log('Using only basic cards due to error when getting user collection from splinterlands: ',e); return basicCards})
 )
 
 module.exports.getPlayerCards = getPlayerCards;
