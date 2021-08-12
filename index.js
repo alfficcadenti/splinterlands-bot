@@ -98,7 +98,7 @@ async function startBotPlayMatch(page, myCards, quest) {
         myCards: myCards
     }
     await page.waitForTimeout(2000);
-    const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team: ',e));
+    const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team API call: ',e));
 
     if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
@@ -146,7 +146,8 @@ async function startBotPlayMatch(page, myCards, quest) {
 
 }
 
-const sleepingTime = 2400000;
+// 1200000 === 20 MINUTES INTERVAL BETWEEN EACH MATCH
+const sleepingTime = 1200000;
 
 (async () => {
     const browser = await puppeteer.launch({

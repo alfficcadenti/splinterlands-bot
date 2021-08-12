@@ -210,7 +210,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         }
         console.log('DISCARDED: ', possibleTeams[i])
     }
-    throw new Error('NO TEAM available');
+    throw new Error('NO TEAM available to be played.');
 }
 
 
