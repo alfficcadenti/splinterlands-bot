@@ -44,7 +44,7 @@ Q: Can I play multiple accounts?
 A: Technically yes, but don't be greedy.
 
 Q: I got the error "cannot read property split of undefined"
-A: check that the credentials file doesn't contain any but ".env" in the name. (no .txt or anything else) and check that there is nothing but ACCOUNT=yourusername and PASSWORD=yourpass in 2 lines with no spaces
+A: check that the credentials file doesn't contain any but ".env" in the name. (no .txt or anything else) and check that there is nothing but ACCOUNT=yourusername and PASSWORD=yourpass in 2 lines with no spaces. Also you must use the username with the posting key, and not the email address.
 
 Q: Why the bot doesn't use my best card I paid 1000$?
 A: Because the bot select cards based on statistics on previous battles choosing the most winning team for your cards. it's bot, not a thinking human being!
