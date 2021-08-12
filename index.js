@@ -24,7 +24,9 @@ async function getQuest() {
 async function startBotPlayMatch(page, myCards, quest) {
     
     console.log( new Date().toLocaleString())
-    console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
+    if(myCards) {
+        console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
+    }
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     await page.setViewport({
         width: 1800,
@@ -129,7 +131,7 @@ async function startBotPlayMatch(page, myCards, quest) {
 
         await page.waitForTimeout(5000);
         await page.click('.btn-green')[0]; //start fight
-        await page.waitForSelector('#btnRumble', { timeout: 240000 })
+        await page.waitForSelector('#btnRumble', { timeout: 340000 })
         await page.waitForTimeout(5000);
         await page.$eval('#btnRumble', elem => elem.click()); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 })
@@ -144,7 +146,7 @@ async function startBotPlayMatch(page, myCards, quest) {
 
 }
 
-const sleepingTime = 1200000;
+const sleepingTime = 2400000;
 
 (async () => {
     const browser = await puppeteer.launch({
@@ -153,15 +155,21 @@ const sleepingTime = 1200000;
     const page = await browser.newPage();
 
     while (true) {
-        const myCards = await getCards(); 
-        const quest = await getQuest();
-        await startBotPlayMatch(page, myCards, quest)
-            .then(() => {
-                console.log('Closing browser', new Date().toLocaleString());        
-            })
-            .catch((e) => {
-                console.log('Error: ', e)
-            })
+        try {
+            const myCards = await getCards(); 
+            const quest = await getQuest();
+            await startBotPlayMatch(page, myCards, quest)
+                .then(() => {
+                    console.log('Closing browser', new Date().toLocaleString());        
+                })
+                .catch((e) => {
+                    console.log('Error: ', e)
+                })
+
+        } catch (e) {
+            console.log('Routine error at: ', new Date().toLocaleString(), e)
+        }
+        
         await console.log('waiting for the next battle in ', sleepingTime / 1000 / 60, ' minutes')
         await new Promise(r => setTimeout(r, sleepingTime));
     }

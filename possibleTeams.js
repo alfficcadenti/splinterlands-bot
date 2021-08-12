@@ -182,13 +182,12 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
-            console.log('play for the quest ',quest.splinter,'? ',questCheck)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
-            if(left > 0 && filteredTeams && filteredTeams.length > 5 && splinters.includes(quest.splinter)) {
-                console.log('PLAY for the quest')
-                console.log('Teams: ', filteredTeams.length , filteredTeams)
+            console.log('play for the quest ',quest.splinter,'? ',questCheck)
+            if(left > 0 && filteredTeams && filteredTeams.length > 10 && splinters.includes(quest.splinter)) {
+                console.log('PLAY for the quest with Teams: ',filteredTeams.length , filteredTeams)
                 const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
-                console.log('PlayThis', res)
+                console.log('Play this for the quest:', res)
                 if (res[0] && res[1]) {
                     return { summoner: res[0], cards: res[1] };
                 }
@@ -196,7 +195,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
 
         //find best combination (most used)
         const res = await mostWinningSummonerTankCombo(possibleTeams, matchDetails);
-        console.log('PlayThis', res)
+        console.log('Dont play for the quest, and play this:', res)
         if (res[0] && res[1]) {
             return { summoner: res[0], cards: res[1] };
         }
@@ -205,7 +204,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
     let i = 0;
     for (i = 0; i <= possibleTeams.length - 1; i++) {
         if (matchDetails.splinters.includes(possibleTeams[i][7]) && helper.teamActualSplinterToPlay(possibleTeams[i]) !== '' && matchDetails.splinters.includes(helper.teamActualSplinterToPlay(possibleTeams[i]).toLowerCase())) {
-            console.log('SELECTED: ', possibleTeams[i]);
+            console.log('Less than 25 teams available. SELECTED: ', possibleTeams[i]);
             const summoner = card.makeCardId(possibleTeams[i][0].toString());
             return { summoner: summoner, cards: possibleTeams[i] };
         }

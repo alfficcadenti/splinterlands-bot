@@ -13,9 +13,6 @@ async function login(page) {
             .then(() => page.waitForTimeout(5000))
             .then(() => page.reload())
             .then(() => page.waitForTimeout(3000))
-            .then(() => page.waitForSelector('.modal-close-new', { timeout: 5000 }))
-            .then(() => page.click('.modal-close-new'))
-
 
     } catch (e) {
         console.log('login error', e);
