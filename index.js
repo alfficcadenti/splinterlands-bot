@@ -147,7 +147,7 @@ async function startBotPlayMatch(page, myCards, quest) {
 }
 
 // 1200000 === 20 MINUTES INTERVAL BETWEEN EACH MATCH
-const sleepingTime = 1200000;
+const sleepingTime = 600000;
 
 (async () => {
     const browser = await puppeteer.launch({
