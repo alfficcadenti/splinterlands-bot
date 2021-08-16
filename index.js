@@ -11,12 +11,15 @@ const ask = require('./possibleTeams');
 
 // LOAD MY CARDS
 async function getCards() {
-    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
+    var myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
+    if(!(await validateEmail(process.env.ACCOUNT))) myCards = await user.getPlayerCards(process.env.USERNAME/* add USERNAME .env */);
     return myCards;
 } 
 
 async function getQuest() {
-    return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
+    var myUser = quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
+    if(!(await validateEmail(process.env.ACCOUNT))) myUser = quests.getPlayerQuest(process.env.USERNAME/* add USERNAME .env */);
+    return myUser
         .then(x=>x)
         .catch(e=>console.log('No quest data'))
 }
@@ -145,6 +148,11 @@ async function startBotPlayMatch(page, myCards, quest) {
 
 
 }
+
+async function validateEmail(email) {
+    const re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(email);
+  }
 
 // 1200000 === 20 MINUTES INTERVAL BETWEEN EACH MATCH
 const sleepingTime = 1200000;
