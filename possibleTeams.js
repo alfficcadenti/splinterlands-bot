@@ -124,7 +124,7 @@ const askFormation = function (matchDetails) {
 
 const possibleTeams = async (matchDetails) => {
     let possibleTeams = [];
-    while (matchDetails.mana > 0) {
+    while (matchDetails.mana > 10) {
         console.log('check battles based on mana: '+matchDetails.mana)
         possibleTeams = await askFormation(matchDetails)
         if (possibleTeams.length > 0) {
