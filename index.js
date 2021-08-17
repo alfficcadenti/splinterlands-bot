@@ -138,12 +138,19 @@ async function startBotPlayMatch(page, myCards, quest) {
         }
 
         await page.waitForTimeout(5000);
-        await page.click('.btn-green')[0]; //start fight
-        await page.waitForSelector('#btnRumble', { timeout: 640000 })
+        try {
+            await page.click('.btn-green')[0]; //start fight
+        } catch {
+            console.log('Start Fight didnt work, waiting 5 sec and retry');
+            await page.waitForTimeout(5000);
+            await page.click('.btn-green')[0]; //start fight
+        }
+
+        await page.waitForSelector('#btnRumble', { timeout: 640000 }).catch(console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
-        await page.$eval('#btnRumble', elem => elem.click()).catch(console.log('match didn t start')); //start rumble
-        await page.waitForSelector('#btnSkip', { timeout: 10000 })
-        await page.$eval('#btnSkip', elem => elem.click()).catch(console.log('match didn t start')); //skip rumble
+        await page.$eval('#btnRumble', elem => elem.click()).catch(console.log('btnRumble didnt click')); //start rumble
+        await page.waitForSelector('#btnSkip', { timeout: 10000 }).catch(console.log('btnSkip not visible'));
+        await page.$eval('#btnSkip', elem => elem.click()).catch(console.log('btnSkip not visible')); //skip rumble
         await page.waitForTimeout(10000);
         try {
             await page.click('.btn--done')[0]; //close the fight
