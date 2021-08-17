@@ -60,8 +60,8 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.i
 
 const getBattlesWithRuleset = (ruleset, mana) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
-    const host = 'https://splinterlands-data-service.herokuapp.com/'
-    //const host = 'http://localhost:3000/'
+    //const host = 'https://splinterlands-data-service.herokuapp.com/'
+    const host = 'http://localhost:3000/'
     const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
     console.log('API call: ', host+url)
     return fetch(host+url)
@@ -124,7 +124,7 @@ const askFormation = function (matchDetails) {
 
 const possibleTeams = async (matchDetails) => {
     let possibleTeams = [];
-    while (matchDetails.mana > 0) {
+    while (matchDetails.mana > 10) {
         console.log('check battles based on mana: '+matchDetails.mana)
         possibleTeams = await askFormation(matchDetails)
         if (possibleTeams.length > 0) {
