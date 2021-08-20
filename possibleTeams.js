@@ -1,3 +1,4 @@
+require('dotenv').config()
 const cards = require('./getCards.js');
 const card = require('./cards');
 const helper = require('./helper');
@@ -60,7 +61,8 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.i
 
 const getBattlesWithRuleset = (ruleset, mana) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
-    const host = 'https://splinterlands-data-service.herokuapp.com/'
+    console.log(process.env.API)
+    const host = process.env.API || 'https://splinterlands-data-service.herokuapp.com/'
     //const host = 'http://localhost:3000/'
     const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
     console.log('API call: ', host+url)
