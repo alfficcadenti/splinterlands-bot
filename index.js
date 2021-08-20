@@ -146,11 +146,11 @@ async function startBotPlayMatch(page, myCards, quest) {
             await page.click('.btn-green')[0]; //start fight
         }
 
-        await page.waitForSelector('#btnRumble', { timeout: 640000 }).catch(console.log('btnRumble not visible'));
+        await page.waitForSelector('#btnRumble', { timeout: 640000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
-        await page.$eval('#btnRumble', elem => elem.click()).catch(console.log('btnRumble didnt click')); //start rumble
-        await page.waitForSelector('#btnSkip', { timeout: 10000 }).catch(console.log('btnSkip not visible'));
-        await page.$eval('#btnSkip', elem => elem.click()).catch(console.log('btnSkip not visible')); //skip rumble
+        await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
+        await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
+        await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
         await page.waitForTimeout(10000);
         try {
             await page.click('.btn--done')[0]; //close the fight
@@ -180,7 +180,7 @@ const sleepingTime = 1800000;
             const quest = await getQuest();
             await startBotPlayMatch(page, myCards, quest)
                 .then(() => {
-                    console.log('Closing browser', new Date().toLocaleString());        
+                    console.log('Closing battle', new Date().toLocaleString());        
                 })
                 .catch((e) => {
                     console.log('Error: ', e)
@@ -190,6 +190,7 @@ const sleepingTime = 1800000;
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
         await console.log(process.env.ACCOUNT,'waiting for the next battle in ', sleepingTime / 1000 / 60, ' minutes')
+        await console.log('If you need support for the bot join the telegram group https://t.me/splinterlandsbot and dont pay scammers')
         await new Promise(r => setTimeout(r, sleepingTime));
     }
 
