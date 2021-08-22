@@ -190,7 +190,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
-        await console.log(process.env.ACCOUNT,'waiting for the next battle in',sleepingTime / 1000 / 60,'minutes at', new Date(Date.now() +sleepingTime).toLocaleString() )
+        await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
         await console.log('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.com/channels/878950429629775912/878950429629775915,  dont pay scammers')
         await new Promise(r => setTimeout(r, sleepingTime));
     }
