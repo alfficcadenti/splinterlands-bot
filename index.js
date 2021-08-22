@@ -166,7 +166,8 @@ async function startBotPlayMatch(page, myCards, quest) {
 }
 
 // 1800000 === 30 MINUTES INTERVAL BETWEEN EACH MATCH
-const sleepingTime = 1800000;
+const sleepingTimeInMinutes = 30;
+const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {
     const browser = await puppeteer.launch({
@@ -189,8 +190,8 @@ const sleepingTime = 1800000;
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
-        await console.log(process.env.ACCOUNT,'waiting for the next battle in ', sleepingTime / 1000 / 60, ' minutes')
-        await console.log('If you need support for the bot join the telegram group https://t.me/splinterlandsbot and dont pay scammers')
+        await console.log(process.env.ACCOUNT,'waiting for the next battle in',sleepingTime / 1000 / 60,'minutes at', new Date(Date.now() +sleepingTime).toLocaleString() )
+        await console.log('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.com/channels/878950429629775912/878950429629775915,  dont pay scammers')
         await new Promise(r => setTimeout(r, sleepingTime));
     }
 
