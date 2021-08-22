@@ -65,4 +65,8 @@ I've created using my personal free time so if you like it or you benefit from i
 
 Cheers!
 
-[Telegram chat](https://t.me/splinterlandsbot) where you can find some support from other people using it
+where you can find some support from other people using it:
+[Discord](
+https://discord.com/channels/878950429629775912/878950429629775915)
+[Telegram chat](https://t.me/splinterlandsbot) 
+
