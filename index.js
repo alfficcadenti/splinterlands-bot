@@ -72,12 +72,20 @@ async function startBotPlayMatch(page, myCards, quest) {
         await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
         .then(button => button.click())
         .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-    await page.waitForTimeout(15000);
+    await page.waitForTimeout(5000);
 
     await page.waitForSelector('.btn--create-team', { timeout: 240000 })
         .catch(async e=> {
             console.error('[Error while waiting for battle]');
             console.error('Refreshing the page and retrying to retrieve a battle');
+            try {
+                page.on('dialog', async dialog => {
+                    await dialog.accept();
+                  });
+            } catch(e) {
+                console.log('click on dialog error',e)
+            }
+
             await page.reload();
             await page.waitForTimeout(3000);
             await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
@@ -171,7 +179,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {
     const browser = await puppeteer.launch({
-        headless: true
+        headless: false
     }); // default is true
     const page = await browser.newPage();
 
@@ -179,6 +187,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
         try {
             const myCards = await getCards(); 
             const quest = await getQuest();
+            page.goto('https://splinterlands.io/');
             await startBotPlayMatch(page, myCards, quest)
                 .then(() => {
                     console.log('Closing battle', new Date().toLocaleString());        
@@ -191,7 +200,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
         await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
-        await console.log('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.com/channels/878950429629775912/878950429629775915,  dont pay scammers')
+        await console.log('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX,  dont pay scammers')
         await new Promise(r => setTimeout(r, sleepingTime));
     }
 

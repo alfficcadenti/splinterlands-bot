@@ -47,6 +47,14 @@ const summoners = [{ 224: 'dragon' },
 
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
 
+const getSummoners = (myCards) => {
+    const sumArray = summoners.map(x=>Number(Object.keys(x)[0]))
+    console.log(sumArray)
+    const mySummoners = myCards.filter(value => sumArray.includes(Number(value)));
+    return mySummoners;
+
+}
+
 const summonerColor = (id) => {
     const summonerDetails = summoners.find(x => x[id]);
     return summonerDetails ? summonerDetails[id] : '';
@@ -59,12 +67,12 @@ const { filter } = require('./data/basicCards.js');
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
 
-const getBattlesWithRuleset = (ruleset, mana) => {
+const getBattlesWithRuleset = (ruleset, mana, summoners) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
     console.log(process.env.API)
     const host = process.env.API || 'https://splinterlands-data-service.herokuapp.com/'
     //const host = 'http://localhost:3000/'
-    const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}`;
+    const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
     console.log('API call: ', host+url)
     return fetch(host+url)
         .then(x => x && x.json())
@@ -72,8 +80,8 @@ const getBattlesWithRuleset = (ruleset, mana) => {
         .catch((e) => console.log('fetch ', e))
 }
 
-const battlesFilterByManacap = async (mana, ruleset) => {
-    const history = await getBattlesWithRuleset(ruleset, mana);
+const battlesFilterByManacap = async (mana, ruleset, summoners) => {
+    const history = await getBattlesWithRuleset(ruleset, mana, summoners);
     if (history) {
         console.log('API battles returned ', history.length)
         return history.filter(
@@ -93,7 +101,7 @@ const battlesFilterByManacap = async (mana, ruleset) => {
     )
 }
 
-const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterByManacap(mana, ruleset, splinters)
+const cardsIdsforSelectedBattles = (mana, ruleset, splinters, summoners) => battlesFilterByManacap(mana, ruleset, summoners)
     .then(x => {
         return x.map(
             (x) => {
@@ -115,8 +123,9 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters) => battlesFilterBy
 
 const askFormation = function (matchDetails) {
     const cards = matchDetails.myCards || basicCards;
+    const mySummoners = getSummoners(cards);
     console.log('INPUT: ', matchDetails.mana, matchDetails.rules, matchDetails.splinters, cards.length)
-    return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters)
+    return cardsIdsforSelectedBattles(matchDetails.mana, matchDetails.rules, matchDetails.splinters, mySummoners)
         .then(x => x.filter(
             x => availabilityCheck(cards, x))
             .map(element => element)//cards.cardByIds(element)
