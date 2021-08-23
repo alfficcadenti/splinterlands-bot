@@ -68,7 +68,7 @@ Cheers!
 where you can find some support from other people using it:
 
 [Discord](
-https://discord.com/channels/878950429629775912/878950429629775915)
+https://discord.gg/bR6cZDsFSX)
 
 [Telegram chat](https://t.me/splinterlandsbot) 
 
