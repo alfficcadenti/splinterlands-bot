@@ -73,31 +73,34 @@ async function startBotPlayMatch(page, myCards, quest) {
         await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
             .then(button => {console.log('Battle button clicked'); button.click()})
             .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(5000);
 
         console.log('waiting for an opponent...')
         await page.waitForSelector('.btn--create-team', { timeout: 50000 })
             .then(()=>console.log('start the match'))
             .catch(async (e)=> {
-            console.error('[Error while waiting for battle]',e);
+            console.error('[Error while waiting for battle]');
             console.error('Refreshing the page and retrying to retrieve a battle');
             await page.waitForTimeout(5000);
             await page.reload();
-            await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                .then(()=>console.log('start the match'))
-                .catch(()=>{console.log('second attempt failed');throw new Error('Battle cannot start');})
-            await page.goto('https://splinterlands.io/');
-            await page.waitForTimeout(5000);
-            await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-                .then(button => button.click())
-                .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
             await page.waitForTimeout(5000);
             await page.waitForSelector('.btn--create-team', { timeout: 50000 })
                 .then(()=>console.log('start the match'))
-                .catch(()=>{console.log('second attempt failed');throw new Error('Battle cannot start');})
-
+                .catch(async ()=>{
+                    console.log('second attempt failed reloading from homepage...');
+                    await page.goto('https://splinterlands.io/');
+                    await page.waitForTimeout(5000);
+                    await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+                        .then(button => button.click())
+                        .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
+                    await page.waitForTimeout(5000);
+                    await page.waitForSelector('.btn--create-team', { timeout: 50000 })
+                        .then(()=>console.log('start the match'))
+                        .catch((e)=>{
+                            console.log('third attempt failed');
+                            throw new Error(e);})
+                        })
         })
-        
     } catch(e) {
         console.error('[Battle cannot start]:', e)
         throw new Error('The Battle cannot start');
@@ -156,8 +159,8 @@ async function startBotPlayMatch(page, myCards, quest) {
             await page.waitForTimeout(5000);
             await page.click('.btn-green')[0]; //start fight
         }
-
-        await page.waitForSelector('#btnRumble', { timeout: 30000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
+        await page.waitForTimeout(5000);
+        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
         await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
@@ -193,7 +196,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
             await page.on('dialog', async dialog => {
                 await dialog.accept();
             });
-            await page.goto('https://splinterlands.io/');
+            page.goto('https://splinterlands.io/');
             console.log('getting user cards collection from splinterlands API...')
             const myCards = await getCards()
                 .then(()=>console.log('cards retrieved'))
@@ -207,6 +210,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
                 .catch((e) => {
                     console.log('Error: ', e)
                 })
+            await page.waitForTimeout(30000);
             await browser.close();
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
