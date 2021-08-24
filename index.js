@@ -74,7 +74,7 @@ async function startBotPlayMatch(page, myCards, quest) {
         .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
     await page.waitForTimeout(5000);
 
-    await page.waitForSelector('.btn--create-team', { timeout: 240000 })
+    await page.waitForSelector('.btn--create-team', { timeout: 120000 })
         .catch(async e=> {
             console.error('[Error while waiting for battle]');
             console.error('Refreshing the page and retrying to retrieve a battle');
@@ -178,13 +178,16 @@ const sleepingTimeInMinutes = 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {
-    const browser = await puppeteer.launch({
-        headless: true
-    }); // default is true
-    const page = await browser.newPage();
-
     while (true) {
         try {
+            const browser = await puppeteer.launch({
+                headless: true
+            });
+            const page = await browser.newPage();
+            await page.setDefaultNavigationTimeout(0)
+            page.on('dialog', async dialog => {
+                await dialog.accept();
+              })
             const myCards = await getCards(); 
             const quest = await getQuest();
             page.goto('https://splinterlands.io/');
@@ -195,7 +198,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
                 .catch((e) => {
                     console.log('Error: ', e)
                 })
-
+            await browser.close();
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
@@ -204,5 +207,4 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
         await new Promise(r => setTimeout(r, sleepingTime));
     }
 
-    await browser.close();
 })();
