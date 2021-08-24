@@ -26,6 +26,8 @@ async function startBotPlayMatch(page, myCards, quest) {
     console.log( new Date().toLocaleString())
     if(myCards) {
         console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
+    } else {
+        console.log(process.env.ACCOUNT, ' playing only basic cards')
     }
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
     await page.setViewport({
@@ -186,7 +188,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
 (async () => {
     while (true) {
         try {
-            console.log('START ', new Date().toLocaleString())
+            console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
                 headless: true,
                 //args: ['--no-sandbox']
@@ -199,7 +201,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
             page.goto('https://splinterlands.io/');
             console.log('getting user cards collection from splinterlands API...')
             const myCards = await getCards()
-                .then(()=>console.log('cards retrieved'))
+                .then((x)=>{console.log('cards retrieved'); return x})
                 .catch(()=>console.log('cards collection api didnt respond')); 
             console.log('getting user quest info from splinterlands API...')
             const quest = await getQuest();
