@@ -179,7 +179,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {
     const browser = await puppeteer.launch({
-        headless: false
+        headless: true
     }); // default is true
     const page = await browser.newPage();
 

@@ -48,11 +48,15 @@ const summoners = [{ 224: 'dragon' },
 const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
 
 const getSummoners = (myCards) => {
-    const sumArray = summoners.map(x=>Number(Object.keys(x)[0]))
-    console.log(sumArray)
-    const mySummoners = myCards.filter(value => sumArray.includes(Number(value)));
-    return mySummoners;
-
+    try {
+        const sumArray = summoners.map(x=>Number(Object.keys(x)[0]))
+        console.log(sumArray)
+        const mySummoners = myCards.filter(value => sumArray.includes(Number(value)));
+        return mySummoners;             
+    } catch(e) {
+        console.log(e);
+        return [];
+    }
 }
 
 const summonerColor = (id) => {
