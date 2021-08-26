@@ -13,7 +13,7 @@ const ask = require('./possibleTeams');
 async function getCards() {
     const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
     return myCards;
-} 
+}
 
 async function getQuest() {
     return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
@@ -22,7 +22,7 @@ async function getQuest() {
 }
 
 async function startBotPlayMatch(page, myCards, quest) {
-    
+
     console.log( new Date().toLocaleString())
     if(myCards) {
         console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
@@ -49,7 +49,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     {console.log('Login')
         await splinterlandsPage.login(page).catch(e=>console.log('Login Error: ',e));
     }
-    
+
     await page.waitForTimeout(8000);
     await page.reload();
     await page.waitForTimeout(8000);
@@ -130,7 +130,7 @@ async function startBotPlayMatch(page, myCards, quest) {
         console.log('Error:', matchDetails, possibleTeams)
         throw new Error('NO TEAMS available to be played');
     }
-    
+
     //TEAM SELECTION
     const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest);
 
@@ -182,7 +182,8 @@ async function startBotPlayMatch(page, myCards, quest) {
 }
 
 // 1800000 === 30 MINUTES INTERVAL BETWEEN EACH MATCH
-const sleepingTimeInMinutes = 30;
+const sleepingTimeInMinutes = process.env.MATCH_INTERVAL || 30;
+// convert minutes to milliseconds
 const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {
@@ -202,12 +203,12 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
             console.log('getting user cards collection from splinterlands API...')
             const myCards = await getCards()
                 .then((x)=>{console.log('cards retrieved'); return x})
-                .catch(()=>console.log('cards collection api didnt respond')); 
+                .catch(()=>console.log('cards collection api didnt respond'));
             console.log('getting user quest info from splinterlands API...')
             const quest = await getQuest();
             await startBotPlayMatch(page, myCards, quest)
                 .then(() => {
-                    console.log('Closing battle', new Date().toLocaleString());        
+                    console.log('Closing battle', new Date().toLocaleString());
                 })
                 .catch((e) => {
                     console.log('Error: ', e)
