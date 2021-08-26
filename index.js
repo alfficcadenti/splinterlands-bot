@@ -181,8 +181,8 @@ async function startBotPlayMatch(page, myCards, quest) {
 
 }
 
-// 1800000 === 30 MINUTES INTERVAL BETWEEN EACH MATCH
-const sleepingTimeInMinutes = 30;
+// 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
+const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 
 (async () => {

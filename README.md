@@ -3,33 +3,36 @@
 This is my personal project of a BOT to play the game [Splinterlands](https://www.splinterlands.com). It requires [NodeJs](https://nodejs.org/it/download/) installed to run.
 
 
-## index.js
+## How to start the BOT:
 
-run `npm install`
+REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
 
-to start BOT login routine. username and password needs to be specified in the file .env (file with no name, only starting dot to create a hidden file) in the root as variable like:
+To start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, example: 
 
 - `ACCOUNT=youraccountname`
 - `PASSWORD=yourpostingpassword`
 
-run `node index.js`
+You can also use the file `.env-example` as a template, but remember to remove `-example` from the filename.
+
+Once the file is created, open cmd (for windows) or terminal (for Mac and Linux) and run:
+
+`npm install`
+
+and then
+
+`npm start`
 
 
-## battlesGetData.js
+## Local History backup (battlesGetData.js)
 
-[ OPTIONAL ] run `node battlesGetData.js`
-
-The BOT leverage an API but in case doesn't work, it is possible to have locally an history as a backup.
+The BOT leverages an API on a free server but in case the traffic is heavy or it doesn't work, it is possible to have locally an history as a backup solution that the bot will read automatically.
 To generate the file 'history.json' with a unique array with the history of the battles of an array of users (to be specified in the file).
 
-input data for future model:
+[ OPTIONAL ] run this command from the terminal:
 
-- _mana_cap_: the total mana that can be selected
-- _ruleset_: rules applied for the match (to be explored)
-- _inactive_: type of monster card that are not available for the match. important for the summoner selection (first card)
+`node battlesGetData.js`
 
-_Example_: `[{"summoner_id":178, "summoner_level":1, "monster_1_id":174, "monster_1_level":1, "monster_1_abilities":[ ], "monster_2_id":172, "monster_2_level":1, "monster_2_abilities":[ ], "monster_3_id":169, "monster_3_level":1, "monster_3_abilities":[ ], "monster_4_id":"", "monster_4_level":"" "monster_4_abilities":"", "monster_5_id":"", "monster_5_level":"", "monster_5_abilities":"", "monster_6_id":"", "monster_6_level":"", "monster_6_abilities":"", "created_date":"2020-02-21T00:51:30.717Z", "match_type":"Ranked", "mana_cap":13, "ruleset":"Back to Basics", "inactive":"Green,Black,Gold", "battle_queue_id":"a137a7b662bdb182069a8a13f36071ed14a4a6d9", "player_rating_initial":596, "player_rating_final":617, "winner":"a14"],...}`
-
+Once the script is done, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
 
 # FAQ
 
