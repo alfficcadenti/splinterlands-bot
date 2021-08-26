@@ -50,7 +50,6 @@ const splinters = ['fire', 'life', 'earth', 'water', 'death', 'dragon']
 const getSummoners = (myCards) => {
     try {
         const sumArray = summoners.map(x=>Number(Object.keys(x)[0]))
-        console.log(sumArray)
         const mySummoners = myCards.filter(value => sumArray.includes(Number(value)));
         return mySummoners;             
     } catch(e) {
@@ -193,7 +192,8 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
         //check if daily quest is not completed
-        if(possibleTeams.length > 25 && quest && quest.total) {
+        const priorityToTheQuest = process.env.QUEST_PRIORITY || true
+        if(priorityToTheQuest && possibleTeams.length > 25 && quest && quest.total) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
             const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
