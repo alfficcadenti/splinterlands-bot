@@ -7,12 +7,15 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
 
-To start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, example: 
+To start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, 
+
+Example: 
 
 - `ACCOUNT=youraccountname`
 - `PASSWORD=yourpostingpassword`
 
 You can also use the file `.env-example` as a template, but remember to remove `-example` from the filename.
+
 
 Once the file is created, open cmd (for windows) or terminal (for Mac and Linux) and run:
 
@@ -21,6 +24,19 @@ Once the file is created, open cmd (for windows) or terminal (for Mac and Linux)
 and then
 
 `npm start`
+
+
+### Optional variables:
+
+The BOT will make a battle every 30 minutes by default, you can change the custom value specifying in the .env the variable `MINUTES_BATTLES_INTERVAL`.
+The BOT will also try to select team to complete the daily quest by default. If you want to remove this option to increase the winning rate, you can set the variable `QUEST_PRIORITY` as false.
+
+Example:
+
+- `QUEST_PRIORITY=false`
+
+- `MINUTES_BATTLES_INTERVAL=30`
+
 
 
 ## Local History backup (battlesGetData.js)
