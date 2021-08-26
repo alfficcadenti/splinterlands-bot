@@ -5,8 +5,9 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 ## How to start the BOT:
 
+REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
 
-to start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, example: 
+To start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, example: 
 
 - `ACCOUNT=youraccountname`
 - `PASSWORD=yourpostingpassword`
