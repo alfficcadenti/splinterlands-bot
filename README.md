@@ -11,6 +11,7 @@ to start BOT login routine. username and password needs to be specified in the f
 
 - `ACCOUNT=youraccountname`
 - `PASSWORD=yourpostingpassword`
+- `MATCH_INTERVAL=match interval in minutes, 30 by default` 
 
 run `node index.js`
 
