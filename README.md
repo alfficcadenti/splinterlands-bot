@@ -12,23 +12,27 @@ To start BOT login routine. you need to create the .env file and include the use
 - `ACCOUNT=youraccountname`
 - `PASSWORD=yourpostingpassword`
 
-You can also use the file `.env-example` as a template.
+You can also use the file `.env-example` as a template, but remember to remove `-example` from the filename.
 
 Once the file is created, open cmd (for windows) or terminal (for Mac and Linux) and run:
 
 `npm install`
+
+and then
 
 `npm start`
 
 
 ## Local History backup (battlesGetData.js)
 
-The BOT leverage an API but in case doesn't work, it is possible to have locally an history as a backup.
+The BOT leverages an API on a free server but in case the traffic is heavy or it doesn't work, it is possible to have locally an history as a backup solution that the bot will read automatically.
 To generate the file 'history.json' with a unique array with the history of the battles of an array of users (to be specified in the file).
 
-[ OPTIONAL ] run `node battlesGetData.js`
+[ OPTIONAL ] run this command from the terminal:
 
-once ran, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
+`node battlesGetData.js`
+
+Once ran, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
 
 # FAQ
 
