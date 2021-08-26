@@ -32,7 +32,7 @@ To generate the file 'history.json' with a unique array with the history of the 
 
 `node battlesGetData.js`
 
-Once ran, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
+Once the script is done, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
 
 # FAQ
 
