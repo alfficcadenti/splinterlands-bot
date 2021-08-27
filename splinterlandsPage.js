@@ -4,7 +4,7 @@ async function login(page) {
         await page.waitForSelector('#email')
             .then(() => page.waitForTimeout(3000))
             .then(() => page.focus('#email'))
-            .then(() => page.type('#email', process.env.ACCOUNT))
+            .then(() => page.type('#email', process.env.EMAIL || process.env.ACCOUNT))
             .then(() => page.focus('#password'))
             .then(() => page.type('#password', process.env.PASSWORD))
 
