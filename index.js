@@ -18,7 +18,7 @@ async function getCards() {
 async function getQuest() {
     return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
         .then(x=>x)
-        .catch(e=>console.log('No quest data, splinterlands API didnt respond.'))
+        .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
 }
 
 async function startBotPlayMatch(page, myCards, quest) {
@@ -47,7 +47,10 @@ async function startBotPlayMatch(page, myCards, quest) {
 
     if (item != undefined)
     {console.log('Login')
-        await splinterlandsPage.login(page).catch(e=>console.log('Login Error: ',e));
+        await splinterlandsPage.login(page).catch(e=>{
+            console.log(e);
+            throw new Error('Login Error');
+        });
     }
     
     await page.waitForTimeout(8000);
@@ -56,10 +59,32 @@ async function startBotPlayMatch(page, myCards, quest) {
     await page.reload();
     await page.waitForTimeout(8000);
 
-    await page.click('#menu_item_battle').catch(e=>console.log('Battle Button not available'));
+    await page.click('#menu_item_battle').then(()=>console.log('Entered...')).catch(e=>console.log('Battle Button not available'));
+    await page.waitForTimeout(3000);
+
+    //check if season reward is available
+    if (process.env.CLAIM_SEASON_REWARD === 'true') {
+        try {
+            console.log('Season reward check: ');
+            await page.waitForSelector('#claim-btn', { visible:true, timeout: 3000 })
+            .then(async (button) => {
+                button.click();
+                console.log(`claiming the season reward. you can check them here https://peakmonsters.com/@${process.env.ACCOUNT}/explorer`);
+                await page.waitForTimeout(20000);
+                await page.reload();
+
+            })
+            .catch(()=>console.log('no season reward to be claimed, but you can still check your data here https://peakmonsters.com/@${process.env.ACCOUNT}/explorer'));
+            await page.waitForTimeout(3000);
+            await page.reload();
+        }
+        catch (e) {
+            console.info('no season reward to be claimed')
+        }
+    }
 
     //if quest done claim reward
-    console.log('Quest: ', quest);
+    console.log('Quest details: ', quest);
     try {
         await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
             .then(button => button.click());
@@ -125,7 +150,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team API call: ',e));
 
     if (possibleTeams && possibleTeams.length) {
-        console.log('Possible Teams: ', possibleTeams.length, '\n', possibleTeams);
+        console.log('Possible Teams based on your cards: ', possibleTeams.length, '\n', possibleTeams);
     } else {
         console.log('Error:', matchDetails, possibleTeams)
         throw new Error('NO TEAMS available to be played');
@@ -202,15 +227,18 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
             console.log('getting user cards collection from splinterlands API...')
             const myCards = await getCards()
                 .then((x)=>{console.log('cards retrieved'); return x})
-                .catch(()=>console.log('cards collection api didnt respond')); 
+                .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
             console.log('getting user quest info from splinterlands API...')
             const quest = await getQuest();
+            if(!quest) {
+                console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
+            }
             await startBotPlayMatch(page, myCards, quest)
                 .then(() => {
                     console.log('Closing battle', new Date().toLocaleString());        
                 })
                 .catch((e) => {
-                    console.log('Error: ', e)
+                    console.log(e)
                 })
             await page.waitForTimeout(30000);
             await browser.close();

@@ -12,10 +12,25 @@ async function login(page) {
             .then(() => page.keyboard.press('Enter'))
             .then(() => page.waitForTimeout(5000))
             .then(() => page.reload())
+            .then(() => page.waitForTimeout(5000))
+            .then(() => page.reload())
             .then(() => page.waitForTimeout(3000))
-
+            .then(async () => {
+                await page.waitForSelector('#log_in_text', {
+                        visible: true, timeout: 3000
+                    })
+                    .then(()=>{
+                        console.log('logged in!')
+                    })
+                    .catch(()=>{
+                        console.log('didnt login');
+                        throw new Error('Didnt login');
+                    })
+                })
+            .then(() => page.waitForTimeout(2000))
+            .then(() => page.reload())
     } catch (e) {
-        console.log('login error', e);
+        throw new Error('Check that you used correctly username and posting key. (dont use email and password)');
     }
 }
 
