@@ -74,8 +74,13 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
     console.log(process.env.API)
     const host = process.env.API || 'https://splinterlands-data-service.herokuapp.com/'
-    //const host = 'http://localhost:3000/'
-    const url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+//    const host = 'http://localhost:3000/'
+    let url = ''
+    if (process.env.API_VERSION == 2) {
+        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+    } else {
+        url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+    }
     console.log('API call: ', host+url)
     return fetch(host+url)
         .then(x => x && x.json())
@@ -104,6 +109,20 @@ const battlesFilterByManacap = async (mana, ruleset, summoners) => {
     )
 }
 
+function compare(a, b) {
+    // Use toUpperCase() to ignore character casing
+    const totA = a[8];
+    const totB = b[8];
+  
+    let comparison = 0;
+    if (totA < totB) {
+      comparison = 1;
+    } else if (totA > totB) {
+      comparison = -1;
+    }
+    return comparison;
+  }
+
 const cardsIdsforSelectedBattles = (mana, ruleset, splinters, summoners) => battlesFilterByManacap(mana, ruleset, summoners)
     .then(x => {
         return x.map(
@@ -116,12 +135,13 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters, summoners) => batt
                     x.monster_4_id ? parseInt(x.monster_4_id) : '',
                     x.monster_5_id ? parseInt(x.monster_5_id) : '',
                     x.monster_6_id ? parseInt(x.monster_6_id) : '',
-                    summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : ''
+                    summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : '',
+                    x.tot ? parseInt(x.tot) : '',
                 ]
             }
         ).filter(
             team => splinters.includes(team[7])
-        )
+        ).sort(compare)
     })
 
 const askFormation = function (matchDetails) {
@@ -141,6 +161,7 @@ const possibleTeams = async (matchDetails) => {
     while (matchDetails.mana > 10) {
         console.log('check battles based on mana: '+matchDetails.mana)
         possibleTeams = await askFormation(matchDetails)
+        console.log(possibleTeams)
         if (possibleTeams.length > 0) {
             return possibleTeams;
         }
@@ -191,6 +212,14 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 }
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
+
+    // //TEST
+    // if (process.env.API_VERSION == 2 && possibleTeams[0][8]) {
+    //     console.log('play the most winning: ', possibleTeams[0])
+    //     return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
+    // }
+    // //
+
     //check if daily quest is not completed
     console.log('quest custom option set as:', process.env.QUEST_PRIORITY, typeof process.env.QUEST_PRIORITY)
     let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
