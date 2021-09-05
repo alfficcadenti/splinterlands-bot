@@ -111,8 +111,8 @@ const battlesFilterByManacap = async (mana, ruleset, summoners) => {
 
 function compare(a, b) {
     // Use toUpperCase() to ignore character casing
-    const totA = a[8];
-    const totB = b[8];
+    const totA = a[9];
+    const totB = b[9];
   
     let comparison = 0;
     if (totA < totB) {
@@ -137,6 +137,7 @@ const cardsIdsforSelectedBattles = (mana, ruleset, splinters, summoners) => batt
                     x.monster_6_id ? parseInt(x.monster_6_id) : '',
                     summonerColor(x.summoner_id) ? summonerColor(x.summoner_id) : '',
                     x.tot ? parseInt(x.tot) : '',
+                    x.ratio ? parseInt(x.ratio) : '',
                 ]
             }
         ).filter(
@@ -212,12 +213,12 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
 
-    // //TEST
-    // if (process.env.API_VERSION == 2 && possibleTeams[0][8]) {
-    //     console.log('play the most winning: ', possibleTeams[0])
-    //     return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
-    // }
-    // //
+    //TEST
+    if (process.env.API_VERSION == 2 && possibleTeams[0][8]) {
+        console.log('play the most winning: ', possibleTeams[0])
+        return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
+    }
+    
 
     //check if daily quest is not completed
     console.log('quest custom option set as:', process.env.QUEST_PRIORITY, typeof process.env.QUEST_PRIORITY)
