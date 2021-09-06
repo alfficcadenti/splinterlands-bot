@@ -215,7 +215,7 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
         try {
             console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
-                headless: true,
+                headless: process.env.HEADLESS || true,
                 //args: ['--no-sandbox']
             }); // default is true
             const page = await browser.newPage();
