@@ -3,7 +3,7 @@ const cardsDetails = require("./data/cardsDetails.json"); //saved json from api 
 const makeCardId = (id) => id;
 
 const color = (id) => {
-    const card = cardsDetails.find(o => o.id === id);
+    const card = cardsDetails.find(o => parseInt(o.id) === parseInt(id));
     const color = card && card.color ? card.color : '';
     return color;
 }
