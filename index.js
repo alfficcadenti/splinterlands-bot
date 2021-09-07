@@ -209,13 +209,16 @@ async function startBotPlayMatch(page, myCards, quest) {
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
 const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
+const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
+
+
 
 (async () => {
     while (true) {
         try {
             console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
-                headless: process.env.HEADLESS || true,
+                headless: isHeadlessMode,
                 //args: ['--no-sandbox']
             }); // default is true
             const page = await browser.newPage();
