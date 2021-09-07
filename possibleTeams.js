@@ -213,7 +213,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
 
 const teamSelection = async (possibleTeams, matchDetails, quest) => {
 
-    //TEST
+    //TEST V2 Strategy ONLY FOR PRIVATE API
     if (process.env.API_VERSION == 2 && possibleTeams[0][8]) {
         console.log('play the most winning: ', possibleTeams[0])
         return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
