@@ -172,7 +172,7 @@ const possibleTeams = async (matchDetails) => {
 
 const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     const bestCombination = await battles.mostWinningSummonerTank(possibleTeams)
-    console.log('BEST SUMMONER and TANK', bestCombination)
+    
     if (bestCombination.summonerWins >= 1 && bestCombination.tankWins > 1 && bestCombination.backlineWins > 1 && bestCombination.secondBacklineWins > 1 && bestCombination.thirdBacklineWins > 1 && bestCombination.forthBacklineWins > 1) {
         const bestTeam = await possibleTeams.find(x => x[0] == bestCombination.bestSummoner && x[1] == bestCombination.bestTank && x[2] == bestCombination.bestBackline && x[3] == bestCombination.bestSecondBackline && x[4] == bestCombination.bestThirdBackline && x[5] == bestCombination.bestForthBackline)
         console.log('BEST TEAM', bestTeam)
@@ -230,7 +230,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         console.log(left + ' battles left for the '+quest.splinter+' quest')
         console.log('play for the quest ',quest.splinter,'? ',questCheck)
         if(left > 0 && filteredTeams && filteredTeams.length > 10 && splinters.includes(quest.splinter)) {
-            console.log('PLAY for the quest with Teams: ',filteredTeams.length , filteredTeams)
+            console.log('PLAY for the quest with Teams: ',filteredTeams.length)
             const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
             console.log('Play this for the quest:', res)
             if (res[0] && res[1]) {

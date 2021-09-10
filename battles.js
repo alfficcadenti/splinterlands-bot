@@ -1,3 +1,9 @@
+const card = require('./cards');
+
+const logCardInfo = (title, cardId, winCount) => {
+    if(cardId)
+        console.log(title + ': ', cardId, '-', card.name(cardId), ' with ' + winCount + ' wins');
+}
 
 const mostWinningSummonerTank = (possibleTeamsList) => {
     mostWinningDeck = { fire: 0, death: 0, earth: 0, water: 0, life: 0 }
@@ -12,13 +18,15 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
         mostWinningSummoner[summoner] = mostWinningSummoner[summoner] ? mostWinningSummoner[summoner] + 1 : 1;
     })
     const bestSummoner = Object.keys(mostWinningSummoner).length && Object.keys(mostWinningSummoner).reduce((a, b) => mostWinningSummoner[a] > mostWinningSummoner[b] ? a : b);
-    console.log('BESTSUMMONER: ', bestSummoner)
+    logCardInfo('BESTSUMMONER', bestSummoner, mostWinningSummoner[bestSummoner]);
+
     if (bestSummoner) {
         possibleTeamsList.filter(team => team[0] == bestSummoner).forEach(team => {
             const tank = team[1];
             mostWinningTank[tank] = mostWinningTank[tank] ? mostWinningTank[tank] + 1 : 1;
         })
         const bestTank = mostWinningTank && Object.keys(mostWinningTank).length && Object.keys(mostWinningTank).reduce((a, b) => mostWinningTank[a] > mostWinningTank[b] ? a : b);
+        logCardInfo('BESTTANK', bestTank, mostWinningTank[bestTank]);
 
         if (bestTank) {
             possibleTeamsList.filter(team => team[0] == bestSummoner && team[1] == bestTank).forEach(team => {
@@ -26,6 +34,7 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
                 mostWinningBackline[backline] = mostWinningBackline[backline] ? mostWinningBackline[backline] + 1 : 1;
             })
             const bestBackline = mostWinningBackline && Object.keys(mostWinningBackline).length && Object.keys(mostWinningBackline).reduce((a, b) => mostWinningBackline[a] > mostWinningBackline[b] ? a : b);
+            logCardInfo('BESTBACKLINE', bestBackline, mostWinningBackline[bestBackline]);
 
             if (bestBackline) {
                 possibleTeamsList.filter(team => team[0] == bestSummoner && team[1] == bestTank && team[2] == bestBackline).forEach(team => {
@@ -33,26 +42,29 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
                     mostWinningSecondBackline[secondBackline] = mostWinningSecondBackline[secondBackline] ? mostWinningSecondBackline[secondBackline] + 1 : 1;
                 })
                 const bestSecondBackline = mostWinningSecondBackline && Object.keys(mostWinningSecondBackline).length && Object.keys(mostWinningSecondBackline).reduce((a, b) => mostWinningSecondBackline[a] > mostWinningSecondBackline[b] ? a : b);
-                
+                logCardInfo('BESTSECONDBACKLINE', bestSecondBackline, mostWinningSecondBackline[bestSecondBackline]);
+
                 if (bestSecondBackline) {
                     possibleTeamsList.filter(team => team[0] == bestSummoner && team[1] == bestTank && team[2] == bestBackline && team[3] == bestSecondBackline).forEach(team => {
                         const thirdBackline = team[4];
                         mostWinningThirdBackline[thirdBackline] = mostWinningThirdBackline[thirdBackline] ? mostWinningThirdBackline[thirdBackline] + 1 : 1;
                     })
                     const bestThirdBackline = mostWinningThirdBackline && Object.keys(mostWinningThirdBackline).length && Object.keys(mostWinningThirdBackline).reduce((a, b) => mostWinningThirdBackline[a] > mostWinningThirdBackline[b] ? a : b);
-                    
+                    logCardInfo('BESTTHIRDBACKLINE', bestThirdBackline, mostWinningThirdBackline[bestThirdBackline]);
+
                     if (bestThirdBackline) {
                         possibleTeamsList.filter(team => team[0] == bestSummoner && team[1] == bestTank && team[2] == bestBackline && team[3] == bestSecondBackline && team[4] == bestThirdBackline).forEach(team => {
                             const forthBackline = team[5];
                             mostWinningForthBackline[forthBackline] = mostWinningForthBackline[forthBackline] ? mostWinningForthBackline[forthBackline] + 1 : 1;
                         })
                         const bestForthBackline = mostWinningForthBackline && Object.keys(mostWinningForthBackline).length && Object.keys(mostWinningForthBackline).reduce((a, b) => mostWinningForthBackline[a] > mostWinningForthBackline[b] ? a : b);
+                        logCardInfo('BESTFORTHBACKLINE', bestForthBackline, mostWinningForthBackline[bestForthBackline]);
                         
                         return { 
-                            bestSummoner: bestSummoner, 
+                            bestSummoner: bestSummoner,
                             summonerWins: mostWinningSummoner[bestSummoner], 
-                            tankWins: mostWinningTank[bestTank], 
                             bestTank: bestTank, 
+                            tankWins: mostWinningTank[bestTank], 
                             bestBackline: bestBackline, 
                             backlineWins: mostWinningBackline[bestBackline], 
                             bestSecondBackline: bestSecondBackline, 
@@ -89,7 +101,7 @@ const mostWinningSummonerTank = (possibleTeamsList) => {
                     secondBacklineWins: mostWinningSecondBackline[bestSecondBackline] 
                 }
             }
-
+            
             return { 
                 bestSummoner: bestSummoner, 
                 summonerWins: mostWinningSummoner[bestSummoner], 

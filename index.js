@@ -153,7 +153,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team API call: ',e));
 
     if (possibleTeams && possibleTeams.length) {
-        console.log('Possible Teams based on your cards: ', possibleTeams.length, '\n', possibleTeams);
+        console.log('Possible Teams based on your cards: ', possibleTeams.length);
     } else {
         console.log('Error:', matchDetails, possibleTeams)
         throw new Error('NO TEAMS available to be played');
@@ -184,7 +184,7 @@ async function startBotPlayMatch(page, myCards, quest) {
         }
         await page.waitForTimeout(5000);
         for (i = 1; i <= 6; i++) {
-            console.log('play: ', teamToPlay.cards[i].toString())
+            console.log('play: ', teamToPlay.cards[i].toString(), ' - ', card.name(teamToPlay.cards[i]));
             await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
                 .then(selector => selector.click()) : console.log('nocard ', i);
             await page.waitForTimeout(1000);

@@ -4,9 +4,14 @@ const makeCardId = (id) => id;
 
 const color = (id) => {
     const card = cardsDetails.find(o => parseInt(o.id) === parseInt(id));
-    const color = card && card.color ? card.color : '';
-    return color;
+    return card?.color || '';
+}
+
+const name = (id) => {
+    const card = cardsDetails.find(o => parseInt(o.id) === parseInt(id));
+    return card?.name || '';
 }
 
 exports.makeCardId = makeCardId;
 exports.color = color;
+exports.name = name;
