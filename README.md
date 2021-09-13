@@ -31,6 +31,7 @@ and then
 The BOT will make a battle every 30 minutes by default, you can change the custom value specifying in the .env the variable `MINUTES_BATTLES_INTERVAL`.
 The BOT will also try to select team to complete the daily quest by default. If you want to remove this option to increase the winning rate, you can set the variable `QUEST_PRIORITY` as false.
 By default, the BOT doesn't check for season rewards but it can automatically click on the seasons reward claim button if available and the `CLAIM_SEASON_REWARD` is set to true. The default option is false
+By default, the BOT will run as headless. Set `HEADLESS` to false to see your browser. The default option is true
 
 Example:
 
@@ -39,6 +40,8 @@ Example:
 - `MINUTES_BATTLES_INTERVAL=30`
 
 - `CLAIM_SEASON_REWARD=true`
+
+- `HEADLESS=false`
 
 
 
