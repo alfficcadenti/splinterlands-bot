@@ -111,6 +111,9 @@ async function startBotPlayMatch(page, myCards, quest) {
             await page.waitForTimeout(5000);
             await page.reload();
             await page.waitForTimeout(5000);
+            await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+            .then(button => {console.log('Battle button clicked'); button.click()})
+            .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
             await page.waitForSelector('.btn--create-team', { timeout: 50000 })
                 .then(()=>console.log('start the match'))
                 .catch(async ()=>{
@@ -166,15 +169,24 @@ async function startBotPlayMatch(page, myCards, quest) {
     }
     await page.waitForTimeout(5000);
     try {
-        await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 }).then(summonerButton => summonerButton.click());
+        await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
+            .then(summonerButton => summonerButton.click())
+            .catch(async ()=>{
+                console.log(teamToPlay.summoner,'divId not found, reload and try again')
+                page.reload();
+                await page.waitForTimeout(2000);
+                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 }).then(summonerButton => summonerButton.click())
+            });
         if (card.color(teamToPlay.cards[0]) === 'Gold') {
-            console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(teamToPlay.cards))
-            await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards)}"]`, { timeout: 8000 }).then(selector => selector.click())
+            console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)))
+            await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6))}"]`, { timeout: 8000 })
+                .then(selector => selector.click())
         }
         await page.waitForTimeout(5000);
         for (i = 1; i <= 6; i++) {
             console.log('play: ', teamToPlay.cards[i].toString())
-            await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 }).then(selector => selector.click()) : console.log('nocard ', i);
+            await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
+                .then(selector => selector.click()) : console.log('nocard ', i);
             await page.waitForTimeout(1000);
         }
 
