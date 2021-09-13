@@ -45,13 +45,25 @@ Example:
 ## Local History backup (battlesGetData.js)
 
 The BOT leverages an API on a free server but in case the traffic is heavy or it doesn't work, it is possible to have locally an history as a backup solution that the bot will read automatically.
-To generate the file 'history.json' with a unique array with the history of the battles of an array of users (to be specified in the file).
+To generate the file 'history.json' with a unique array with the history of the battles of an array of users specified in the file.
 
 [ OPTIONAL ] run this command from the terminal:
 
 `node battlesGetData.js`
 
 Once the script is done, it will create a file 'history.json' in the data folder. To makes the bot using it, you have to rename it in: 'newHistory.json' 
+
+**How to get history data from users of my choice?**
+
+1. Open battlesGetData.js in notepad and change the usersToGrab on line 69 to the users of your choice
+2. Run `node battlesGetData.js` in the bot folder
+3. File history.json is created, rename it to newHistory.json to replace the existing history data OR extend the newHistory.json file (see below)
+
+**How to extend the newHistory.json without deleting existing data?**
+
+1. Backup newHistory.json in case something goes wrong
+2. Inside the data folder, run `node combine.js` in the data folder to add the data from history.json to the newHistory.json file
+
 
 # FAQ
 

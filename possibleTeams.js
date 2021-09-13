@@ -65,8 +65,6 @@ const summonerColor = (id) => {
 
 const historyBackup = require("./data/newHistory.json");
 const basicCards = require('./data/basicCards.js');
-const { filter } = require('./data/basicCards.js');
-
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
 
@@ -77,9 +75,9 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 //    const host = 'http://localhost:3000/'
     let url = ''
     if (process.env.API_VERSION == 2) {
-        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
     } else {
-        url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
     }
     console.log('API call: ', host+url)
     return fetch(host+url)
@@ -110,7 +108,6 @@ const battlesFilterByManacap = async (mana, ruleset, summoners) => {
 }
 
 function compare(a, b) {
-    // Use toUpperCase() to ignore character casing
     const totA = a[9];
     const totB = b[9];
   
@@ -221,7 +218,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
     
 
     //check if daily quest is not completed
-    console.log('quest custom option set as:', process.env.QUEST_PRIORITY, typeof process.env.QUEST_PRIORITY)
+    console.log('quest custom option set as:', process.env.QUEST_PRIORITY)
     let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
     if(priorityToTheQuest && possibleTeams.length > 25 && quest && quest.total) {
         const left = quest.total - quest.completed;
@@ -229,7 +226,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
         console.log(left + ' battles left for the '+quest.splinter+' quest')
         console.log('play for the quest ',quest.splinter,'? ',questCheck)
-        if(left > 0 && filteredTeams && filteredTeams.length > 10 && splinters.includes(quest.splinter)) {
+        if(left > 0 && filteredTeams && filteredTeams.length > 3 && splinters.includes(quest.splinter)) {
             console.log('PLAY for the quest with Teams: ',filteredTeams.length , filteredTeams)
             const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
             console.log('Play this for the quest:', res)
@@ -261,13 +258,3 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
 
 module.exports.possibleTeams = possibleTeams;
 module.exports.teamSelection = teamSelection;
-
-
-// const summoners = history.map(x => x.summoner_id);
-
-// // console.log([...new Set(summoners)])
-// console.log(summonerColor(27))
-
-// // TO TEST uncomment below:
-// const matchDetails = { mana: 30, rules: '', splinters: ['fire','water','life','earth','death'], myCards: myCards}
-// console.log(possibleTeams(matchDetails))
