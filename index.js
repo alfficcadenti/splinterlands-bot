@@ -5,9 +5,10 @@ const puppeteer = require('puppeteer');
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
-const helper = require('./helper');
+const { clickOnElement, getElementText, teamActualSplinterToPlay } = require('./helper');
 const quests = require('./quests');
 const ask = require('./possibleTeams');
+const chalk = require('chalk');
 
 // LOAD MY CARDS
 async function getCards() {
@@ -19,6 +20,11 @@ async function getQuest() {
     return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
         .then(x=>x)
         .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
+}
+
+async function closePopups(page) {
+	if (await clickOnElement(page, '.close', 4000) ) return;
+	await clickOnElement(page, '.modal-close-new', 1000);
 }
 
 async function startBotPlayMatch(page, myCards, quest) {
@@ -46,18 +52,16 @@ async function startBotPlayMatch(page, myCards, quest) {
       .catch(()=> console.log('Already logged in'))
 
     if (item != undefined)
-    {console.log('Login')
+    {console.log('Login attempt...')
         await splinterlandsPage.login(page).catch(e=>{
             console.log(e);
             throw new Error('Login Error');
         });
     }
     
+
     await page.waitForTimeout(8000);
-    await page.reload();
-    await page.waitForTimeout(8000);
-    await page.reload();
-    await page.waitForTimeout(8000);
+    await closePopups(page);
 
     await page.click('#menu_item_battle').then(()=>console.log('Entered...')).catch(e=>console.log('Battle Button not available'));
     await page.waitForTimeout(3000);
@@ -178,8 +182,8 @@ async function startBotPlayMatch(page, myCards, quest) {
                 page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 }).then(summonerButton => summonerButton.click())
             });
         if (card.color(teamToPlay.cards[0]) === 'Gold') {
-            console.log('Dragon play TEAMCOLOR', helper.teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)))
-            await page.waitForXPath(`//div[@data-original-title="${helper.teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6))}"]`, { timeout: 8000 })
+            console.log('Dragon play TEAMCOLOR', teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)))
+            await page.waitForXPath(`//div[@data-original-title="${teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6))}"]`, { timeout: 8000 })
                 .then(selector => selector.click())
         }
         await page.waitForTimeout(5000);
@@ -204,13 +208,20 @@ async function startBotPlayMatch(page, myCards, quest) {
         await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
         await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
-        await page.waitForTimeout(10000);
+        await page.waitForTimeout(5000);
         try {
-            await page.click('.btn--done')[0]; //close the fight
-        } catch(e) {
-            console.log('btn done not found')
-            throw new Error('btn done not found');
-        }
+			const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+			if (winner.trim() == process.env.ACCOUNT.split('@')[0]) {
+				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+			}
+			else {
+                console.log(chalk.red('You lost'));
+			}
+		} catch {
+			console.log('Could not find winner - draw?');
+		}
+		await clickOnElement(page, '.btn--done', 20000, 10000);
     } catch (e) {
         throw new Error(e);
     }
@@ -227,6 +238,7 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 
 (async () => {
     while (true) {
+        console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX,  dont pay scammers'));
         try {
             console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
@@ -255,13 +267,12 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
                 .catch((e) => {
                     console.log(e)
                 })
-            await page.waitForTimeout(30000);
+            await page.waitForTimeout(5000);
             await browser.close();
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
         await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
-        await console.log('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX,  dont pay scammers')
         await new Promise(r => setTimeout(r, sleepingTime));
     }
 })();
