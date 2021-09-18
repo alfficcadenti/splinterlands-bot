@@ -87,13 +87,17 @@ async function startBotPlayMatch(page, myCards, quest) {
         }
     }
 
-    //if quest done claim reward
-    console.log('Quest details: ', quest);
-    try {
-        await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
-            .then(button => button.click());
-    } catch (e) {
-        console.info('no quest reward to be claimed waiting for the battle...')
+    if (process.env.CLAIM_QUEST_REWARD === 'false') {
+        console.log('Do not claim quest reward');
+    } else {
+        //if quest done claim reward
+        console.log('Quest details: ', quest);
+        try {
+            await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
+                .then(button => button.click());
+        } catch (e) {
+            console.info('no quest reward to be claimed waiting for the battle...')
+        }
     }
 
     await page.waitForTimeout(5000);
