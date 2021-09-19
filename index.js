@@ -252,11 +252,12 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 (async () => {
     while (true) {
         console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX,  dont pay scammers'));
+        console.log(chalk.bold.greenBright.bgBlack('Contact the owner via discord or telegram if you interested in the private API for a higher winning rate'));
         try {
             console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
                 headless: isHeadlessMode,
-                //args: ['--no-sandbox']
+                args: ['--no-sandbox']
             }); // default is true
             const page = await browser.newPage();
             await page.setDefaultNavigationTimeout(500000);
