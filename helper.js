@@ -47,7 +47,14 @@ const getElementText = async (page, selector, timeout=15000) => {
 	return text;
 }
 
+const getElementTextByXpath = async (page, selector, timeout=20000) => {
+	const element = await page.waitForXPath(selector,  { timeout: timeout });
+	const text = await element.evaluate(el => el.textContent);
+	return text;
+}
+
 
 module.exports.teamActualSplinterToPlay = teamActualSplinterToPlay;
 module.exports.clickOnElement = clickOnElement;
 module.exports.getElementText = getElementText;
+module.exports.getElementTextByXpath = getElementTextByXpath;

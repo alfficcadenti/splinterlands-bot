@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
-const { clickOnElement, getElementText, teamActualSplinterToPlay } = require('./helper');
+const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay } = require('./helper');
 const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
@@ -96,10 +96,16 @@ async function startBotPlayMatch(page, myCards, quest) {
         console.info('no quest reward to be claimed waiting for the battle...')
     }
 
+
+
     await page.waitForTimeout(5000);
 
     // LAUNCH the battle
     try {
+        const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
+        if(ecr) {
+            console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+        }
         console.log('waiting for battle button...')
         await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
             .then(button => {console.log('Battle button clicked'); button.click()})
