@@ -251,8 +251,9 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 
 (async () => {
     while (true) {
-        console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX,  dont pay scammers'));
-        console.log(chalk.bold.greenBright.bgBlack('Contact the owner via discord or telegram if you interested in the private API for a higher winning rate'));
+        console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
+        console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
+        console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));
         try {
             console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
             const browser = await puppeteer.launch({
