@@ -37,7 +37,7 @@ const clickOnElement = async (page, selector, timeout=20000, delayBeforeClicking
 		}
     } catch (e) {
     }
-	console.log('Could not find element', selector);
+	console.log('No element', selector, 'to be closed');
 	return false;
 }
 
