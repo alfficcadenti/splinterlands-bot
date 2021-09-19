@@ -223,10 +223,9 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
                 console.log('PLAY for the quest with Teams: ',filteredTeams.length, filteredTeams, 'PLAY: ', filteredTeams[0])
                 return { summoner: filteredTeams[0][0], cards: filteredTeams[0] };
             }
-        } else {
-            console.log('play the most winning: ', possibleTeams[0])
-            return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };    
         }
+        console.log('play the most winning: ', possibleTeams[0])
+        return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
     }
     
 
