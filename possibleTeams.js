@@ -1,5 +1,4 @@
 require('dotenv').config()
-const cards = require('./getCards.js');
 const card = require('./cards');
 const helper = require('./helper');
 const battles = require('./battles');
@@ -212,11 +211,13 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
     let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
     //TEST V2 Strategy ONLY FOR PRIVATE API
     if (process.env.API_VERSION == 2 && possibleTeams[0][8]) {
+        // check dragons and remove the non playable:
+        const removedUnplayableDragons = possibleTeams.filter(team=>team[7]!=='dragon' || matchDetails.splinters.includes(helper.teamActualSplinterToPlay(team).toLowerCase()))
         //check quest for private api V2:
-        if(priorityToTheQuest && possibleTeams.length > 25 && quest && quest.total) {
+        if(priorityToTheQuest && removedUnplayableDragons.length > 25 && quest && quest.total) {
             const left = quest.total - quest.completed;
             const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
-            const filteredTeams = possibleTeams.filter(team=>team[7]===quest.splinter)
+            const filteredTeams = removedUnplayableDragons.filter(team=>team[7]===quest.splinter)
             console.log(left + ' battles left for the '+quest.splinter+' quest')
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
             if(left > 0 && filteredTeams && filteredTeams.length > 1 && splinters.includes(quest.splinter) && filteredTeams[0][8]) {
@@ -224,8 +225,9 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
                 return { summoner: filteredTeams[0][0], cards: filteredTeams[0] };
             }
         }
-        console.log('play the most winning: ', possibleTeams[0])
-        return { summoner: possibleTeams[0][0], cards: possibleTeams[0] };
+        const filteredTeams = removedUnplayableDragons.filter(team=>matchDetails.splinters.includes(helper.teamActualSplinterToPlay(team).toLowerCase()))
+        console.log('play the most winning: ', filteredTeams[0])
+        return { summoner: filteredTeams[0][0], cards: filteredTeams[0] };
     }
     
 

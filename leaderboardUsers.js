@@ -1,7 +1,6 @@
 const fetch = require("node-fetch");
-const user = require('./user');
 
-async function getBronzeLeaderboard() {
+async function printUsersFromLeaderboard() {
     const res = await fetch('https://api2.splinterlands.com/players/leaderboard_with_player?season=69&leaderboard=0')
         .then((response) => {
             if (!response.ok) {
@@ -19,11 +18,6 @@ async function getBronzeLeaderboard() {
     return res.leaderboard.map(elem=>elem.player)
 }
 
-getBronzeLeaderboard()
-    .then(
-        async x=> await user.getPlayerCards(x)
-            .then(x=>{if(x.ok) {console.log(x); return x.json()} })
-            .then(x=>console.log(x))
-        );
+printUsersFromLeaderboard().then(x=> console.log(x))
 
 

@@ -29,6 +29,14 @@ async function closePopups(page) {
     await clickOnElement(page, '.modal-close', 4000, 2000);
 }
 
+async function checkEcr(page) {
+    const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
+    if(ecr) {
+        console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+        return ecr
+    }
+}
+
 async function startBotPlayMatch(page, myCards, quest) {
     
     console.log( new Date().toLocaleString())
@@ -37,7 +45,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     } else {
         console.log(process.env.ACCOUNT, ' playing only basic cards')
     }
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36');
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3163.100 Safari/537.36');
     await page.setViewport({
         width: 1800,
         height: 1500,
@@ -65,6 +73,12 @@ async function startBotPlayMatch(page, myCards, quest) {
     await page.waitForTimeout(8000);
     await closePopups(page);
 
+    const ecr = await checkEcr(page);
+    if (process.env.ECR_LIMIT && parseFloat(ecr) < process.env.ECR_LIMIT) {
+        console.log(chalk.bold.red('ECR lower than limit '+process.env.ECR_LIMIT+'%. reduce the limit in the env file config or wait the interval for the next battle'));
+        throw new Error('ECR lower than limit '+process.env.ECR_LIMIT);
+    } 
+
     await page.click('#menu_item_battle').then(()=>console.log('Entered...')).catch(e=>console.log('Battle Button not available'));
     await closePopups(page);
     await page.waitForTimeout(3000);
@@ -91,7 +105,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     }
 
     //if quest done claim reward. default to true. to deactivate daily quest rewards claim, set CLAIM_DAILY_QUEST_REWARD false in the env file
-    console.log('Quest details: ', quest);
+    console.log('claim daily quest setting:', process.env.CLAIM_DAILY_QUEST_REWARD, 'Quest details: ', quest);
     const isClaimDailyQuestMode = process.env.CLAIM_DAILY_QUEST_REWARD === 'false' ? false : true; 
     if (isClaimDailyQuestMode === true) {
         try {
@@ -109,10 +123,6 @@ async function startBotPlayMatch(page, myCards, quest) {
 
     // LAUNCH the battle
     try {
-        const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
-        if(ecr) {
-            console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
-        }
         console.log('waiting for battle button...')
         await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
             .then(button => {console.log('Battle button clicked'); button.click()})
@@ -235,6 +245,8 @@ async function startBotPlayMatch(page, myCards, quest) {
 			console.log('Could not find winner - draw?');
 		}
 		await clickOnElement(page, '.btn--done', 20000, 10000);
+		await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+        
     } catch (e) {
         throw new Error(e);
     }
@@ -250,27 +262,46 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
 
 
 (async () => {
+    console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
+    const browser = await puppeteer.launch({
+        headless: isHeadlessMode, // default is true
+        args: ['--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-canvas-aa', 
+        '--disable-2d-canvas-clip-aa', 
+        '--disable-gl-drawing-for-tests', 
+        '--no-first-run',
+        '--no-zygote', 
+        '--disable-dev-shm-usage', 
+        '--use-gl=swiftshader', 
+        '--single-process', // <- this one doesn't works in Windows
+        '--disable-gpu',
+        '--enable-webgl',
+        '--hide-scrollbars',
+        '--mute-audio',
+        '--disable-infobars',
+        '--disable-breakpad',
+        '--disable-web-security']
+    }); 
+    const page = await browser.newPage();
+    await page.setDefaultNavigationTimeout(500000);
+    await page.on('dialog', async dialog => {
+        await dialog.accept();
+    });
+    page.goto('https://splinterlands.io/');
+    console.log('getting user cards collection from splinterlands API...')
+    const myCards = await getCards()
+        .then((x)=>{console.log('cards retrieved'); return x})
+        .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
+    console.log('getting user quest info from splinterlands API...')
+    
     while (true) {
         console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
         console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
         console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));
         try {
-            console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
-            const browser = await puppeteer.launch({
-                headless: isHeadlessMode,
-                args: ['--no-sandbox']
-            }); // default is true
-            const page = await browser.newPage();
-            await page.setDefaultNavigationTimeout(500000);
-            await page.on('dialog', async dialog => {
-                await dialog.accept();
-            });
-            page.goto('https://splinterlands.io/');
-            console.log('getting user cards collection from splinterlands API...')
-            const myCards = await getCards()
-                .then((x)=>{console.log('cards retrieved'); return x})
-                .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
-            console.log('getting user quest info from splinterlands API...')
             const quest = await getQuest();
             if(!quest) {
                 console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
@@ -283,11 +314,13 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
                     console.log(e)
                 })
             await page.waitForTimeout(5000);
-            await browser.close();
+            
         } catch (e) {
             console.log('Routine error at: ', new Date().toLocaleString(), e)
         }
         await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
         await new Promise(r => setTimeout(r, sleepingTime));
     }
+    console.log('Process end. need to restart')
+    await browser.close();
 })();
