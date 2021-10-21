@@ -7,15 +7,18 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
 
-To start BOT login routine. you need to create the .env file and include the username and password (file with no name, only starting dot to create a hidden file) in the root folder, 
+Once NodeJS is installed and you downloaded the bot in a specific folder, you need to set your configuration in the .env file:
+
+you need to create the .env file and include the username and posting key (file with no name, only starting dot to create a hidden file) in the bot folder, 
 
 Example: 
 
 - `ACCOUNT=youraccountname`
-- `PASSWORD=yourpostingpassword`
+- `PASSWORD=yourpostingkey`
 
 You can also use the file `.env-example` as a template, but remember to remove `-example` from the filename.
 
+__IMPORTANT:__ the bot needs the __username and posting key__ in order to login. __Don't use the email and password__. If you don't have the posting key, you need to _'Request Keys'_ from the top right menu in Splinterlands. You will receive a link to follow where you will get your Hive private keys. __Store them safely and don't share them with anyone!__  
 
 Once the file is created, open cmd (for windows) or terminal (for Mac and Linux) and run:
 
@@ -33,6 +36,7 @@ The BOT will also try to select team to complete the daily quest by default. If 
 By default, the BOT doesn't check for season rewards but it can automatically click on the seasons reward claim button if available and the `CLAIM_SEASON_REWARD` is set to true. The default option is false.
 By default, the BOT checks automatically for daily quest rewards but the claim option can be deactivated with the option `CLAIM_DAILY_QUEST_REWARD` is set to false. The default option is true.
 By default, the BOT will run as headless. Set `HEADLESS` to false to see your browser. The default option is true
+By default, the BOT will run no matter the ECR level. Set `ECR_LIMIT` to a specific value you want the bot to rest and recover the ECR.
 
 Example:
 
@@ -45,6 +49,8 @@ Example:
 - `CLAIM_DAILY_QUEST_REWARD=false`
 
 - `HEADLESS=false`
+
+- `ECR_LIMIT=10`
 
 
 
