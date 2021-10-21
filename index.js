@@ -12,7 +12,7 @@ const chalk = require('chalk');
 
 // LOAD MY CARDS
 async function getCards() {
-    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
+    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0], new Date(Date.now() - 86400000)) //split to prevent email use
     return myCards;
 } 
 
@@ -180,7 +180,7 @@ async function startBotPlayMatch(page, myCards, quest) {
     const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team API call: ',e));
 
     if (possibleTeams && possibleTeams.length) {
-        console.log('Possible Teams based on your cards: ', possibleTeams.length, '\n', possibleTeams);
+        console.log('Possible Teams based on your cards: ', possibleTeams.length);
     } else {
         console.log('Error:', matchDetails, possibleTeams)
         throw new Error('NO TEAMS available to be played');
@@ -260,6 +260,17 @@ const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
 
 
+const blockedResources = [
+    'splinterlands.com/players/item_details',
+    'splinterlands.com/players/event',
+    'splinterlands.com/market/for_sale_grouped',
+    'splinterlands.com/battle/history2',
+    'splinterlands.com/players/messages',
+    'facebook.com',
+    'google-analytics.com',
+    'twitter.com',
+];
+
 
 (async () => {
     console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
@@ -286,6 +297,19 @@ const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true;
         '--disable-web-security']
     }); 
     const page = await browser.newPage();
+    await page.setRequestInterception(true);
+    page.on('request', (interceptedRequest) => {
+        //    console.log("URL: " + interceptedRequest.url())
+        //            page.on('request', (request) => {
+            // BLOCK CERTAIN DOMAINS
+            if (blockedResources.some(resource => interceptedRequest.url().includes(resource))){
+        //        console.log("Blocked: " + interceptedRequest.url());
+                interceptedRequest.abort();
+            // ALLOW OTHER REQUESTS
+            } else {
+                interceptedRequest.continue();
+        }
+          });
     await page.setDefaultNavigationTimeout(500000);
     await page.on('dialog', async dialog => {
         await dialog.accept();
