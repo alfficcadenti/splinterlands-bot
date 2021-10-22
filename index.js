@@ -277,23 +277,23 @@ const blockedResources = [
     const browser = await puppeteer.launch({
         headless: isHeadlessMode, // default is true
         args: ['--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-canvas-aa', 
-        '--disable-2d-canvas-clip-aa', 
-        '--disable-gl-drawing-for-tests', 
-        '--no-first-run',
-        '--no-zygote', 
-        '--disable-dev-shm-usage', 
-        '--use-gl=swiftshader', 
-        '--single-process', // <- this one doesn't works in Windows
-        '--disable-gpu',
-        '--enable-webgl',
-        '--hide-scrollbars',
-        '--mute-audio',
-        '--disable-infobars',
-        '--disable-breakpad',
+        // '--disable-setuid-sandbox',
+        // '--disable-dev-shm-usage',
+        // '--disable-accelerated-2d-canvas',
+        // '--disable-canvas-aa', 
+        // '--disable-2d-canvas-clip-aa', 
+        // '--disable-gl-drawing-for-tests', 
+        // '--no-first-run',
+        // '--no-zygote', 
+        // '--disable-dev-shm-usage', 
+        // '--use-gl=swiftshader', 
+        // '--single-process', // <- this one doesn't works in Windows
+        // '--disable-gpu',
+        // '--enable-webgl',
+        // '--hide-scrollbars',
+        // '--mute-audio',
+        // '--disable-infobars',
+        // '--disable-breakpad',
         '--disable-web-security']
     }); 
     const page = await browser.newPage();
