@@ -277,8 +277,8 @@ const blockedResources = [
     const browser = await puppeteer.launch({
         headless: isHeadlessMode, // default is true
         args: ['--no-sandbox',
-        // '--disable-setuid-sandbox',
-        // '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        //'--disable-dev-shm-usage',
         // '--disable-accelerated-2d-canvas',
         // '--disable-canvas-aa', 
         // '--disable-2d-canvas-clip-aa', 
@@ -297,19 +297,21 @@ const blockedResources = [
         '--disable-web-security']
     }); 
     const page = await browser.newPage();
-    await page.setRequestInterception(true);
-    page.on('request', (interceptedRequest) => {
-        //    console.log("URL: " + interceptedRequest.url())
-        //            page.on('request', (request) => {
-            // BLOCK CERTAIN DOMAINS
-            if (blockedResources.some(resource => interceptedRequest.url().includes(resource))){
-        //        console.log("Blocked: " + interceptedRequest.url());
-                interceptedRequest.abort();
-            // ALLOW OTHER REQUESTS
-            } else {
-                interceptedRequest.continue();
-        }
-          });
+
+    // NOT WORKING on ALL the machines
+    // await page.setRequestInterception(true);
+    // page.on('request', (interceptedRequest) => {
+    //     //    console.log("URL: " + interceptedRequest.url())
+    //     //            page.on('request', (request) => {
+    //         // BLOCK CERTAIN DOMAINS
+    //         if (blockedResources.some(resource => interceptedRequest.url().includes(resource))){
+    //     //        console.log("Blocked: " + interceptedRequest.url());
+    //             interceptedRequest.abort();
+    //         // ALLOW OTHER REQUESTS
+    //         } else {
+    //             interceptedRequest.continue();
+    //     }
+    //       });
     await page.setDefaultNavigationTimeout(500000);
     await page.on('dialog', async dialog => {
         await dialog.accept();
