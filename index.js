@@ -37,14 +37,10 @@ async function checkEcr(page) {
     }
 }
 
-async function startBotPlayMatch(page, myCards, quest) {
+async function startBotPlayMatch(page) {
     
-    console.log( new Date().toLocaleString())
-    if(myCards) {
-        console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
-    } else {
-        console.log(process.env.ACCOUNT, ' playing only basic cards')
-    }
+    console.log( new Date().toLocaleString(), 'opening browser...')
+    
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3163.100 Safari/537.36');
     await page.setViewport({
         width: 1800,
@@ -73,11 +69,29 @@ async function startBotPlayMatch(page, myCards, quest) {
     await page.waitForTimeout(8000);
     await closePopups(page);
 
+
     const ecr = await checkEcr(page);
     if (process.env.ECR_LIMIT && parseFloat(ecr) < process.env.ECR_LIMIT) {
         console.log(chalk.bold.red('ECR lower than limit '+process.env.ECR_LIMIT+'%. reduce the limit in the env file config or wait the interval for the next battle'));
         throw new Error('ECR lower than limit '+process.env.ECR_LIMIT);
     } 
+
+    console.log('getting user quest info from splinterlands API...')
+    const quest = await getQuest();
+    if(!quest) {
+        console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
+    }
+
+    console.log('getting user cards collection from splinterlands API...')
+    const myCards = await getCards()
+        .then((x)=>{console.log('cards retrieved'); return x})
+        .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
+
+    if(myCards) {
+        console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
+    } else {
+        console.log(process.env.ACCOUNT, ' playing only basic cards')
+    }
 
     await page.click('#menu_item_battle').then(()=>console.log('Entered...')).catch(e=>console.log('Battle Button not available'));
     await closePopups(page);
@@ -317,22 +331,13 @@ const blockedResources = [
         await dialog.accept();
     });
     page.goto('https://splinterlands.io/');
-    console.log('getting user cards collection from splinterlands API...')
-    const myCards = await getCards()
-        .then((x)=>{console.log('cards retrieved'); return x})
-        .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
-    console.log('getting user quest info from splinterlands API...')
     
     while (true) {
         console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
         console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
         console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));
         try {
-            const quest = await getQuest();
-            if(!quest) {
-                console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
-            }
-            await startBotPlayMatch(page, myCards, quest)
+            await startBotPlayMatch(page)
                 .then(() => {
                     console.log('Closing battle', new Date().toLocaleString());        
                 })
