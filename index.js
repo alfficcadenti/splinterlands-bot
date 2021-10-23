@@ -12,7 +12,7 @@ const chalk = require('chalk');
 
 // LOAD MY CARDS
 async function getCards() {
-    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0], new Date(Date.now() - 86400000)) //split to prevent email use
+    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
     return myCards;
 } 
 
