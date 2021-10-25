@@ -10,6 +10,11 @@ const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
 
+let totalDec = 0;
+let winTotal = 0;
+let loseTotal = 0;
+let undefinedTotal = 0;
+
 // LOAD MY CARDS
 async function getCards() {
     const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
@@ -251,15 +256,25 @@ async function startBotPlayMatch(page) {
 			if (winner.trim() == process.env.ACCOUNT.split('@')[0]) {
 				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
 				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+
+                totalDec += parseFloat(decWon);
+                winTotal += 1;
 			}
 			else {
                 console.log(chalk.red('You lost'));
+
+                loseTotal += 1;
 			}
 		} catch {
 			console.log('Could not find winner - draw?');
+
+            undefinedTotal += 1;
 		}
 		await clickOnElement(page, '.btn--done', 20000, 10000);
 		await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+
+        console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+        console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
         
     } catch (e) {
         throw new Error(e);
