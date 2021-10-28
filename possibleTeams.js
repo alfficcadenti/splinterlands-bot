@@ -221,7 +221,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
             console.log(left + ' battles left for the '+quest.splinter+' quest')
             console.log('play for the quest ',quest.splinter,'? ',questCheck)
             if(left > 0 && filteredTeams && filteredTeams.length > 1 && splinters.includes(quest.splinter) && filteredTeams[0][8]) {
-                console.log('PLAY for the quest with Teams: ',filteredTeams.length, filteredTeams, 'PLAY: ', filteredTeams[0])
+                console.log('PLAY for the quest with Teams size: ',filteredTeams.length, 'PLAY: ', filteredTeams[0][0])
                 return { summoner: filteredTeams[0][0], cards: filteredTeams[0] };
             }
         }
@@ -240,7 +240,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest) => {
         console.log(left + ' battles left for the '+quest.splinter+' quest')
         console.log('play for the quest ',quest.splinter,'? ',questCheck)
         if(left > 0 && filteredTeams && filteredTeams.length > 3 && splinters.includes(quest.splinter)) {
-            console.log('PLAY for the quest with Teams: ',filteredTeams.length , filteredTeams)
+            console.log('PLAY for the quest with Teams size: ',filteredTeams.length)
             const res = await mostWinningSummonerTankCombo(filteredTeams, matchDetails);
             console.log('Play this for the quest:', res)
             if (res[0] && res[1]) {
