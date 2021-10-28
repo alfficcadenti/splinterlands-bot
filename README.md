@@ -36,7 +36,8 @@ The BOT will also try to select team to complete the daily quest by default. If 
 By default, the BOT doesn't check for season rewards but it can automatically click on the seasons reward claim button if available and the `CLAIM_SEASON_REWARD` is set to true. The default option is false.
 By default, the BOT checks automatically for daily quest rewards but the claim option can be deactivated with the option `CLAIM_DAILY_QUEST_REWARD` is set to false. The default option is true.
 By default, the BOT will run as headless. Set `HEADLESS` to false to see your browser. The default option is true
-By default, the BOT will run no matter the ECR level. Set `ECR_LIMIT` to a specific value you want the bot to rest and recover the ECR.
+By default, the BOT will run no matter the ECR level. Set `ECR_STOP_LIMIT` to a specific value you want the bot to rest and recover the ECR. The bot will recover until the `ECR_RECOVER_TO` is reached or until 100% ECR.
+
 
 Example:
 
@@ -50,7 +51,9 @@ Example:
 
 - `HEADLESS=false`
 
-- `ECR_LIMIT=10`
+- `ECR_STOP_LIMIT=50`
+
+- `ECR_RECOVER_TO=99`
 
 
 
