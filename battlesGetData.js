@@ -7,7 +7,7 @@ const distinct = (value, index, self) => {
 }
 
 async function getBattleHistory(player = '', data = {}) {
-    const battleHistory = await fetch('https://api.steemmonsters.io/battle/history?player=' + player)
+    const battleHistory = await fetch('https://api2.splinterlands.com/battle/history?player=' + player)
         .then((response) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
