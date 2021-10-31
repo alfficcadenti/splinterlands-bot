@@ -53,7 +53,6 @@ const getElementTextByXpath = async (page, selector, timeout=20000) => {
 	return text;
 }
 
-
 module.exports.teamActualSplinterToPlay = teamActualSplinterToPlay;
 module.exports.clickOnElement = clickOnElement;
 module.exports.getElementText = getElementText;
