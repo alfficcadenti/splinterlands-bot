@@ -269,7 +269,7 @@ async function startBotPlayMatch(page) {
 			if (winner.trim() == process.env.ACCOUNT.split('@')[0]) {
 				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
 				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-                totalDec += parseFloat(decWon);
+                totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
                 winTotal += 1;
 			}
 			else {
