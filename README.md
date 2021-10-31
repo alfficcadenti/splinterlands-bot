@@ -37,7 +37,7 @@ By default, the BOT doesn't check for season rewards but it can automatically cl
 By default, the BOT checks automatically for daily quest rewards but the claim option can be deactivated with the option `CLAIM_DAILY_QUEST_REWARD` is set to false. The default option is true.
 By default, the BOT will run as headless. Set `HEADLESS` to false to see your browser. The default option is true
 By default, the BOT will run no matter the ECR level. Set `ECR_STOP_LIMIT` to a specific value you want the bot to rest and recover the ECR. The bot will recover until the `ECR_RECOVER_TO` is reached or until 100% ECR.
-
+If you want the bot to play only one color (when it's possible), use the variable `FAVOURITE_DECK`  and specify the splinter by choosing only one among: fire, life, earth, water, death, dragon. 
 
 Example:
 
@@ -54,6 +54,8 @@ Example:
 - `ECR_STOP_LIMIT=50`
 
 - `ECR_RECOVER_TO=99`
+
+- `FAVOURITE_DECK=dragon`
 
 
 
