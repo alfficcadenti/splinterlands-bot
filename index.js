@@ -315,6 +315,7 @@ const blockedResources = [
 (async () => {
     console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
     const browser = await puppeteer.launch({
+        // executablePath: process.env.CHROME,
         headless: isHeadlessMode, // default is true
         args: ['--no-sandbox',
         '--disable-setuid-sandbox',
