@@ -131,3 +131,5 @@ async function letsgo () {
     console.log('Process end.')
     await browser.close();
 }
+
+letsgo();
