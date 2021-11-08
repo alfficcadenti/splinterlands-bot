@@ -1,15 +1,9 @@
 //my own little bit of code to login and retrieve some useful information form the accoutnx
 require('dotenv').config();
 const puppeteer = require('puppeteer');
-const user = require('./user');
-const card = require('./cards');
-const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay } = require('./helper');
-const quests = require('./quests');
-const ask = require('./possibleTeams');
+const { clickOnElement, getElementTextByXpath } = require('./helper');
 const chalk = require('chalk');
 const splinterlandsPage = require('./splinterlandsPage'); 
-// console.log('quick little sanity check for the script');
-// console.log(`Account: ${process.env.ACCOUNT}`)
 
 async function closePopups(page) {
     console.log('check if any modal needs to be closed...')
@@ -19,9 +13,7 @@ async function closePopups(page) {
 }
 
 async function getStats(page) {
-    
     console.log( new Date().toLocaleString(), 'opening browser...')
-    
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3163.100 Safari/537.36');
     await page.setViewport({
         width: 1800,
@@ -59,31 +51,33 @@ async function getStats(page) {
             const rank = await page.$eval(rank_selector, (element) => element.textContent);
             const amount = await page.$eval(dec_selector, (element) => element.textContent);
             const energy = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
+            const quest = await page.$eval("#quest_title1", (element) => element.textContent);
+            let questCompletion = 0
+            const questOne = await page.$$eval("#quest_slot empty", (element) => element.forEach( _ => {
+                questCompletion += 1;
+                })
+            )
             if(amount){
-                    console.log(chalk.bold.red('------------------'));
+                    console.log(chalk.bold.red('-------------------------------------'));
                     console.log(chalk.bold.whiteBright.cyan(`ACCOUNT: ${process.env.ACCOUNT}`));
-                    console.log('DEC AMOUNT: ', amount);
-                    console.log(chalk.bold.whiteBright.green('Your current Energy Capture Rate is ' + energy.split('.')[0] + "%"));
-                    console.log(chalk.bold.whiteBright.green(`RANK:${rank}`));
+                    console.log('DEC AMOUNT:', amount);
+                    console.log(chalk.bold.whiteBright.green('ENERGY CAPTURE RATE: ' + energy.split('.')[0] + "%"));
+                    console.log(chalk.bold.whiteBright.green(`RANK: ${rank}`));
                     console.log(chalk.bold.whiteBright.green(`POWER: ${power}`));
-                    console.log(chalk.bold.red('------------------'));
+                    console.log(chalk.bold.whiteBright.cyan(`QUEST: ${quest}, ${questCompletion}/5`))
+                    console.log(chalk.bold.red('-------------------------------------'));
                 } else {
-                    console.log(chalk.bold.whiteBright.green('could not find the text div with dec amount'));
+                    console.log(chalk.bold.whiteBright.green('accountInfo(line74): could not find page contents'));
                 }
             }
         catch (e) {
             console.info('no season reward to be claimed')
         }
-    // }
-
-
 }
-
 //////////////////////////////////////////////////////////////////////////
 const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
-
 
 const blockedResources = [
     'splinterlands.com/players/item_details',
@@ -97,7 +91,6 @@ const blockedResources = [
 ];
 
 async function letsgo () {
-    console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
     const browser = await puppeteer.launch({
         headless: isHeadlessMode, // default is true
         args: ['--no-sandbox',
@@ -128,7 +121,6 @@ async function letsgo () {
     }
     // await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
     // await new Promise(r => setTimeout(r, sleepingTime));
-    console.log('Process end.')
     await browser.close();
 }
 
