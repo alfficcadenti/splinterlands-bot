@@ -104,6 +104,19 @@ async function startBotPlayMatch(page) {
         console.log('Error for quest details. Splinterlands API didnt work or you used incorrect username, remove @ and dont use email')
     }
 
+    if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
+        try {
+            await page.click('#quest_new_btn')
+                .then(async a=>{
+                    await page.reload();
+                    console.log('New quest requested')})
+                .catch(e=>console.log('Cannot click on new quest'))
+
+        } catch(e) {
+            console.log('Error while skipping new quest')
+        }
+    }
+
     console.log('getting user cards collection from splinterlands API...')
     const myCards = await getCards()
         .then((x)=>{console.log('cards retrieved'); return x})
@@ -319,13 +332,13 @@ const blockedResources = [
         args: ['--no-sandbox',
         '--disable-setuid-sandbox',
         //'--disable-dev-shm-usage',
-        // '--disable-accelerated-2d-canvas',
+        //'--disable-accelerated-2d-canvas',
         // '--disable-canvas-aa', 
         // '--disable-2d-canvas-clip-aa', 
-        // '--disable-gl-drawing-for-tests', 
+        //'--disable-gl-drawing-for-tests', 
         // '--no-first-run',
         // '--no-zygote', 
-        // '--disable-dev-shm-usage', 
+        '--disable-dev-shm-usage', 
         // '--use-gl=swiftshader', 
         // '--single-process', // <- this one doesn't works in Windows
         // '--disable-gpu',
@@ -357,14 +370,24 @@ const blockedResources = [
     await page.on('dialog', async dialog => {
         await dialog.accept();
     });
+    await page.on('error', function(err) {
+        const errorMessage = err.toString();
+        console.log('browser error: ', errorMessage)
+    });
+    await page.on('pageerror', function(err) {
+        const errorMessage = err.toString();
+        console.log('browser page error: ', errorMessage)
+    });
     page.goto('https://splinterlands.io/');
     page.recoverStatus = 0;
     page.favouriteDeck = process.env.FAVOURITE_DECK || '';
     while (true) {
         console.log('Recover Status: ', page.recoverStatus)
-        console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
-        console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
-        console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram')); 
+        if(!process.env.API) {
+            console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
+            console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
+            console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));     
+        }
         try {
             await startBotPlayMatch(page)
                 .then(() => {
