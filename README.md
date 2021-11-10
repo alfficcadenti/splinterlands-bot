@@ -61,6 +61,29 @@ Example:
 - `SKIP_QUEST=life,snipe,neutral`
 
 
+### Running bot as a daemon with PM2
+
+To run your bot as a daemon (background process) you can use NPM package PM2. PM2 is daemon process manager, that works on Linux, MacOS, and Windows. To install PM2 globally, you need to run:
+
+# `npm install pm2 -g`
+
+To start a bot, do all the preparation steps from the above, but instead of `npm start`, run this:
+
+`pm2 start index.js`
+
+You can now run `pm2 list` command to see your bot up and running. It will automatically start on system startup now. You can control the bot with these commands:
+
+`pm2 start <id>`
+
+`pm2 stop <id>`
+
+`pm2 restart <id>`
+
+`pm2 delete <id>`
+
+You can find more information on PM2 usage options at their [official webiste](https://pm2.keymetrics.io/).
+
+
 
 
 ## Local History backup (battlesGetData.js)
