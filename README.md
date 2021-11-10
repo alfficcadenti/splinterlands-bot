@@ -5,7 +5,7 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 ## How to start the BOT:
 
-REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
+REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/ (at least the last stable version 14.18.0)
 
 Once NodeJS is installed and you downloaded the bot in a specific folder, you need to set your configuration in the .env file:
 
