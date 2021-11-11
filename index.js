@@ -5,7 +5,7 @@ const puppeteer = require('puppeteer');
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
-const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay } = require('./helper');
+const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep } = require('./helper');
 const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
@@ -14,6 +14,7 @@ let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
+const ecrRecoveryRatePerHour = 1.04;
 
 // LOAD MY CARDS
 async function getCards() {
@@ -46,7 +47,7 @@ async function checkEcr(page) {
     }
 }
 
-async function startBotPlayMatch(page) {
+async function startBotPlayMatch(page, browser) {
     
     console.log( new Date().toLocaleString(), 'opening browser...')
     
@@ -81,23 +82,27 @@ async function startBotPlayMatch(page) {
 
 
     const ecr = await checkEcr(page);
-    if(page.recoverStatus === 0) {
-        if (process.env.ECR_STOP_LIMIT && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
-            page.recoverStatus = 1
+    if (ecr === undefined) throw new Error('Fail to get ECR.')
+
+    if (process.env.ECR_STOP_LIMIT && process.env.ECR_RECOVER_TO && ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
+        if (ecr < parseFloat(process.env.ECR_STOP_LIMIT)) {
             console.log(chalk.bold.red(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}%. reduce the limit in the env file config or wait until ECR will be at ${process.env.ECR_RECOVER_TO || '100'}%`));
-            throw new Error(`ECR lower than limit ${process.env.ECR_STOP_LIMIT}`);
-        }
-    } else {
-        if (process.env.ECR_STOP_LIMIT && process.env.ECR_RECOVER_TO && (ecr >= parseFloat(process.env.ECR_RECOVER_TO || ecr === 100))) {
-            page.recoverStatus = 0;
-            console.log(chalk.bold.red('ECR Recovered'));
-        } else {
+        } else if (ecr < parseFloat(process.env.ECR_RECOVER_TO)) {
             console.log(chalk.bold.red(`ECR Not yet Recovered to ${process.env.ECR_RECOVER_TO}`));
-            throw new Error(`Recovery phase and ECR lower than limit ${process.env.ECR_RECOVER_TO}`);
         }
+        
+        // calculating time needed for recovery
+        ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
+        recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
+        
+        console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.\nClosing browser...`));
+        await closeBrowser(browser);
+        console.log(chalk.bold.white(`Browser closed.\nInitiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
+        await sleep(recoveryTimeInHours * 3600 * 1000);
+
+        throw new Error(`Restart needed.`);
     }
     
-
     console.log('getting user quest info from splinterlands API...')
     const quest = await getQuest();
     if(!quest) {
@@ -324,8 +329,8 @@ const blockedResources = [
     'twitter.com',
 ];
 
-
-(async () => {
+async function run() {
+    let start = true
     console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
     const browser = await puppeteer.launch({
         headless: isHeadlessMode, // default is true
@@ -348,7 +353,8 @@ const blockedResources = [
         // '--disable-infobars',
         // '--disable-breakpad',
         '--disable-web-security']
-    }); 
+    });
+    
     //const page = await browser.newPage();
     let [page] = await browser.pages();
 
@@ -381,29 +387,40 @@ const blockedResources = [
     page.goto('https://splinterlands.io/');
     page.recoverStatus = 0;
     page.favouriteDeck = process.env.FAVOURITE_DECK || '';
-    while (true) {
+    while (start) {
         console.log('Recover Status: ', page.recoverStatus)
         if(!process.env.API) {
             console.log(chalk.bold.redBright.bgBlack('Dont pay scammers!'));
             console.log(chalk.bold.whiteBright.bgBlack('If you need support for the bot, join the telegram group https://t.me/splinterlandsbot and discord https://discord.gg/bR6cZDsFSX'));
             console.log(chalk.bold.greenBright.bgBlack('If you interested in a higher winning rate with the private API, contact the owner via discord or telegram'));     
         }
-        try {
-            await startBotPlayMatch(page)
-                .then(() => {
-                    console.log('Closing battle', new Date().toLocaleString());        
-                })
-                .catch((e) => {
-                    console.log(e)
-                })
-            await page.waitForTimeout(5000);
-            
-        } catch (e) {
-            console.log('Routine error at: ', new Date().toLocaleString(), e)
-        }
-        await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
-        await new Promise(r => setTimeout(r, sleepingTime));
+        await startBotPlayMatch(page, browser)
+            .then(async () => {
+                console.log('Closing battle', new Date().toLocaleString());
+                await page.waitForTimeout(5000);
+                await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
+                await new Promise(r => setTimeout(r, sleepingTime));
+            })
+            .catch((e) => {
+                console.log(e);
+                start = false;
+            })
     }
-    console.log('Process end. need to restart')
-    await browser.close();
-})();
+    await restart(browser);
+}
+
+async function closeBrowser(browser) {
+    try {
+        await browser.close();
+     } catch (error) {
+         console.log(chalk.bold.redBright.bgBlack('Fail to close browser. Reason:'), chalk.bold.whiteBright.bgBlack(error))
+     }
+}
+
+async function restart(browser) {
+    console.log(chalk.bold.redBright.bgBlack('Closing browser and restarting bot...'))
+    await closeBrowser(browser);
+    await run();
+}
+
+(async()=> await run())()

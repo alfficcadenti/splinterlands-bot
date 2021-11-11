@@ -48,12 +48,18 @@ const getElementText = async (page, selector, timeout=15000) => {
 }
 
 const getElementTextByXpath = async (page, selector, timeout=20000) => {
-	const element = await page.waitForXPath(selector,  { timeout: timeout });
-	const text = await element.evaluate(el => el.textContent);
-	return text;
+	try {
+		const element = await page.waitForXPath(selector,  { timeout: timeout });
+		const text = await element.evaluate(el => el.textContent);
+		return text;
+	} catch (e) {
+		console.log('Get text by xpath error.', e);
+		return false
+	}
 }
 
 module.exports.teamActualSplinterToPlay = teamActualSplinterToPlay;
 module.exports.clickOnElement = clickOnElement;
 module.exports.getElementText = getElementText;
 module.exports.getElementTextByXpath = getElementTextByXpath;
+module.exports.sleep = sleep;
