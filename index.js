@@ -295,7 +295,9 @@ async function startBotPlayMatch(page) {
 }
 
 // 30 MINUTES INTERVAL BETWEEN EACH MATCH (if not specified in the .env file)
-const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
+// uncomment the other sleepingTimeInMinutes to return to original bot behavior
+//const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
+const sleepingTimeInMinutes = 10;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
 
