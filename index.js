@@ -14,6 +14,9 @@ let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
+//COMMENT: comment the following 2 vars if you want to return bot to original state
+process.env.ECR_STOP_LIMIT = 75;
+process.env.ECR_RECOVER_TO = 99;
 
 // LOAD MY CARDS
 async function getCards() {
