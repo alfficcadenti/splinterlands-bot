@@ -1,5 +1,4 @@
 //'use strict';
-require('dotenv').config()
 const puppeteer = require('puppeteer');
 
 const splinterlandsPage = require('./splinterlandsPage');
@@ -10,6 +9,7 @@ const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
 
+let account = process.env.ACCOUNT.split('@')[0]; //split to prevent email use
 let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
@@ -18,12 +18,12 @@ const ecrRecoveryRatePerHour = 1.04;
 
 // LOAD MY CARDS
 async function getCards() {
-    const myCards = await user.getPlayerCards(process.env.ACCOUNT.split('@')[0]) //split to prevent email use
+    const myCards = await user.getPlayerCards(account)
     return myCards;
 } 
 
 async function getQuest() {
-    return quests.getPlayerQuest(process.env.ACCOUNT.split('@')[0])
+    return quests.getPlayerQuest(account)
         .then(x=>x)
         .catch(e=>console.log('No quest data, splinterlands API didnt respond, or you are wrongly using the email and password instead of username and posting key'))
 }
@@ -128,9 +128,9 @@ async function startBotPlayMatch(page, browser) {
         .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
 
     if(myCards) {
-        console.log(process.env.ACCOUNT, ' deck size: '+myCards.length)
+        console.log(account, ' deck size: '+myCards.length)
     } else {
-        console.log(process.env.ACCOUNT, ' playing only basic cards')
+        console.log(account, ' playing only basic cards')
     }
 
     //check if season reward is available
@@ -140,12 +140,12 @@ async function startBotPlayMatch(page, browser) {
             await page.waitForSelector('#claim-btn', { visible:true, timeout: 3000 })
             .then(async (button) => {
                 button.click();
-                console.log(`claiming the season reward. you can check them here https://peakmonsters.com/@${process.env.ACCOUNT}/explorer`);
+                console.log(`claiming the season reward. you can check them here https://peakmonsters.com/@${account}/explorer`);
                 await page.waitForTimeout(20000);
                 await page.reload();
 
             })
-            .catch(()=>console.log(`no season reward to be claimed, but you can still check your data here https://peakmonsters.com/@${process.env.ACCOUNT}/explorer`));
+            .catch(()=>console.log(`no season reward to be claimed, but you can still check your data here https://peakmonsters.com/@${account}/explorer`));
             await page.waitForTimeout(3000);
             await page.reload();
         }
@@ -285,7 +285,7 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForTimeout(5000);
         try {
 			const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
-			if (winner.trim() == process.env.ACCOUNT.split('@')[0]) {
+			if (winner.trim() == account) {
 				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
 				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
                 totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
@@ -331,7 +331,7 @@ const blockedResources = [
 
 async function run() {
     let start = true
-    console.log('START ', process.env.ACCOUNT, new Date().toLocaleString())
+    console.log('START ', account, new Date().toLocaleString())
     const browser = await puppeteer.launch({
         headless: isHeadlessMode, // default is true
         args: ['--no-sandbox',
@@ -398,7 +398,7 @@ async function run() {
             .then(async () => {
                 console.log('Closing battle', new Date().toLocaleString());
                 await page.waitForTimeout(5000);
-                await console.log(process.env.ACCOUNT,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
+                await console.log(account,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
                 await new Promise(r => setTimeout(r, sleepingTime));
             })
             .catch((e) => {
@@ -423,4 +423,5 @@ async function restart(browser) {
     await run();
 }
 
-(async()=> await run())()
+// (async()=> await run())()
+exports.run = run;
