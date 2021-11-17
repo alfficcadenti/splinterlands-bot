@@ -9,7 +9,9 @@ const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
 
-let account = process.env.ACCOUNT.split('@')[0]; //split to prevent email use
+let isMultiAccountMode = false;
+let account = '';
+let password = '';
 let totalDec = 0;
 let winTotal = 0;
 let loseTotal = 0;
@@ -69,12 +71,12 @@ async function startBotPlayMatch(page, browser) {
 
     if (item != undefined)
     {console.log('Login attempt...')
-        await splinterlandsPage.login(page).catch(e=>{
+        await splinterlandsPage.login(page, account, password).catch(e=>{
             console.log(e);
             throw new Error('Login Error');
         });
     }
-    
+
     await page.goto('https://splinterlands.io/?p=battle_history');
     await page.waitForTimeout(8000);
     await closePopups(page);
@@ -95,9 +97,9 @@ async function startBotPlayMatch(page, browser) {
         ecrNeededToRecover = parseFloat(process.env.ECR_RECOVER_TO) - parseFloat(ecr);
         recoveryTimeInHours = Math.ceil(ecrNeededToRecover / ecrRecoveryRatePerHour);
         
-        console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.\nClosing browser...`));
+        console.log(chalk.bold.white(`Time needed to recover ECR, approximately ${recoveryTimeInHours * 60} minutes.`));
         await closeBrowser(browser);
-        console.log(chalk.bold.white(`Browser closed.\nInitiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
+        console.log(chalk.bold.white(`Initiating sleep mode. The bot will awaken at ${new Date(Date.now() + recoveryTimeInHours * 3600 * 1000).toLocaleString()}`));
         await sleep(recoveryTimeInHours * 3600 * 1000);
 
         throw new Error(`Restart needed.`);
@@ -397,31 +399,44 @@ async function run() {
         await startBotPlayMatch(page, browser)
             .then(async () => {
                 console.log('Closing battle', new Date().toLocaleString());
-                await page.waitForTimeout(5000);
-                await console.log(account,'waiting for the next battle in', sleepingTime / 1000 / 60 , ' minutes at ', new Date(Date.now() +sleepingTime).toLocaleString() )
-                await new Promise(r => setTimeout(r, sleepingTime));
+                
+                if (isMultiAccountMode) {
+                    start = false;
+                    await closeBrowser(browser);
+                } else {
+                    await page.waitForTimeout(5000);
+                    console.log(account, 'waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString());
+                    await sleep(sleepingTime);
+                }
             })
             .catch((e) => {
                 console.log(e);
                 start = false;
             })
     }
-    await restart(browser);
+    if (!isMultiAccountMode) {
+        await restart(browser);
+    }
 }
 
 async function closeBrowser(browser) {
-    try {
-        await browser.close();
-     } catch (error) {
-         console.log(chalk.bold.redBright.bgBlack('Fail to close browser. Reason:'), chalk.bold.whiteBright.bgBlack(error))
-     }
+    console.log('Closing browser...')
+    await browser.close()
+        .then(()=>{console.log('Browser closed.')})
+        .catch((e)=>{console.log(chalk.bold.redBright.bgBlack('Fail to close browser. Reason:'), chalk.bold.whiteBright.bgBlack(e.message))});
 }
 
 async function restart(browser) {
-    console.log(chalk.bold.redBright.bgBlack('Closing browser and restarting bot...'))
+    console.log(chalk.bold.redBright.bgBlack('Restarting bot...'))
     await closeBrowser(browser);
     await run();
 }
 
-// (async()=> await run())()
+function setupAccount(uname, pword, multiAcc) {
+    account = uname;
+    password = pword;
+    isMultiAccountMode = multiAcc;
+}
+
 exports.run = run;
+exports.setupAccount = setupAccount;
