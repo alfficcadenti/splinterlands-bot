@@ -28,7 +28,7 @@ const teamActualSplinterToPlay = (teamIdsArray) => teamIdsArray.reduce(deckValid
 
 const clickOnElement = async (page, selector, timeout=20000, delayBeforeClicking = 0) => {
 	try {
-        const elem = await page.waitForSelector(selector, { timeout: timeout });
+        const elem = await page.waitForSelector(selector, {timeout: timeout });
 		if(elem) {
 			await sleep(delayBeforeClicking);
 			console.log('Clicking element', selector);
@@ -42,18 +42,24 @@ const clickOnElement = async (page, selector, timeout=20000, delayBeforeClicking
 }
 
 const getElementText = async (page, selector, timeout=15000) => {
-	const element = await page.waitForSelector(selector,  { timeout: timeout });
+	const element = await page.waitForSelector(selector, {timeout: timeout });
 	const text = await element.evaluate(el => el.textContent);
 	return text;
 }
 
 const getElementTextByXpath = async (page, selector, timeout=20000) => {
-	const element = await page.waitForXPath(selector,  { timeout: timeout });
-	const text = await element.evaluate(el => el.textContent);
-	return text;
+	try {
+		const element = await page.waitForXPath(selector,  { timeout: timeout });
+		const text = await element.evaluate(el => el.textContent);
+		return text;
+	} catch (e) {
+		console.log('Get text by xpath error.', e);
+		return false
+	}
 }
 
 module.exports.teamActualSplinterToPlay = teamActualSplinterToPlay;
 module.exports.clickOnElement = clickOnElement;
 module.exports.getElementText = getElementText;
 module.exports.getElementTextByXpath = getElementTextByXpath;
+module.exports.sleep = sleep;

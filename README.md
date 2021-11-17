@@ -11,7 +11,7 @@ This is my personal project of a BOT to play the game [Splinterlands](https://ww
 
 ## How to start the BOT:
 
-REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/
+REQUIREMENT: You need to install NodeJS from https://nodejs.org/en/download/ (at least the last stable version 14.18.0)
 
 Once NodeJS is installed and you downloaded the bot in a specific folder, you need to set your configuration in the .env file:
 
@@ -44,6 +44,7 @@ By default, the BOT checks automatically for daily quest rewards but the claim o
 By default, the BOT will run as headless. Set `HEADLESS` to false to see your browser. The default option is true
 By default, the BOT will run no matter the ECR level. Set `ECR_STOP_LIMIT` to a specific value you want the bot to rest and recover the ECR. The bot will recover until the `ECR_RECOVER_TO` is reached or until 100% ECR.
 If you want the bot to play only one color (when it's possible), use the variable `FAVOURITE_DECK`  and specify the splinter by choosing only one among: fire, life, earth, water, death, dragon. 
+If you want the bot to try to skip specific quest types you can include multiple quest in the variable `SKIP_QUEST` separated by the comma (`SKIP_QUEST=life,snipe,neutral`). whenever it's possible, the bot will click to ask for a new one. Remember you can only ask for a new one once based on the game rules.
 
 Example:
 
@@ -62,6 +63,32 @@ Example:
 - `ECR_RECOVER_TO=99`
 
 - `FAVOURITE_DECK=dragon`
+
+- `SKIP_QUEST=life,snipe,neutral`
+
+
+### Running bot as a daemon with PM2
+
+To run your bot as a daemon (background process) you can use NPM package PM2. PM2 is daemon process manager, that works on Linux, MacOS, and Windows. To install PM2 globally, you need to run:
+
+# `npm install pm2 -g`
+
+To start a bot, do all the preparation steps from the above, but instead of `npm start`, run this:
+
+`pm2 start index.js`
+
+You can now run `pm2 list` command to see your bot up and running. It will automatically start on system startup now. You can control the bot with these commands:
+
+`pm2 start <id>`
+
+`pm2 stop <id>`
+
+`pm2 restart <id>`
+
+`pm2 delete <id>`
+
+You can find more information on PM2 usage options at their [official webiste](https://pm2.keymetrics.io/).
+
 
 
 
