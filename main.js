@@ -12,6 +12,7 @@ async function startMulti() {
     let missingValue = false;
     let accounts = process.env.ACCOUNT.split(',');
     let passwords = process.env.PASSWORD.split(',');
+    let count = 1;
 
     // trim account and password
     accounts = accounts.map(e => e.trim());
@@ -59,6 +60,7 @@ async function startMulti() {
         }
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
+        count++;
     }
 }
 
