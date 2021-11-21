@@ -1,7 +1,7 @@
 //'use strict';
 require('dotenv').config()
 const puppeteer = require('puppeteer');
-
+//test
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
