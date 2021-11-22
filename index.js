@@ -229,7 +229,7 @@ async function startBotPlayMatch(page, browser) {
         myCards: myCards
     }
     await page.waitForTimeout(2000);
-    const possibleTeams = await ask.possibleTeams(matchDetails).catch(e=>console.log('Error from possible team API call: ',e));
+    const possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
 
     if (possibleTeams && possibleTeams.length) {
         console.log('Possible Teams based on your cards: ', possibleTeams.length);

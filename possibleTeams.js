@@ -67,6 +67,7 @@ const historyBackup = require("./data/newHistory.json");
 const basicCards = require('./data/basicCards.js');
 
 let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.includes(v));
+let account = '';
 
 const getBattlesWithRuleset = (ruleset, mana, summoners) => {
     const rulesetEncoded = encodeURIComponent(ruleset);
@@ -75,9 +76,9 @@ const getBattlesWithRuleset = (ruleset, mana, summoners) => {
 //    const host = 'http://localhost:3000/'
     let url = ''
     if (process.env.API_VERSION == 2) {
-        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
     } else {
-        url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${process.env.ACCOUNT}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        url = `battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
     }
     console.log('API call: ', host+url)
     return fetch(host+url)
@@ -154,11 +155,12 @@ const askFormation = function (matchDetails) {
 
 }
 
-const possibleTeams = async (matchDetails) => {
+const possibleTeams = async (matchDetails, acc) => {
     let possibleTeams = [];
     while (matchDetails.mana > 10) {
-        console.log('check battles based on mana: '+matchDetails.mana)
-        possibleTeams = await askFormation(matchDetails)
+        console.log('check battles based on mana: '+matchDetails.mana);
+        account = acc;
+        possibleTeams = await askFormation(matchDetails);
         if (possibleTeams.length > 0) {
             return possibleTeams;
         }
