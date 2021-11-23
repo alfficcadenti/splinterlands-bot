@@ -318,6 +318,32 @@ async function startBotPlayMatch(page, browser) {
 const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
+const executablePath = process.env.CHROME_EXEC || null;
+let puppeteer_options = {
+    headless: isHeadlessMode, // default is true
+    args: ['--no-sandbox',
+    '--disable-setuid-sandbox',
+    //'--disable-dev-shm-usage',
+    //'--disable-accelerated-2d-canvas',
+    // '--disable-canvas-aa', 
+    // '--disable-2d-canvas-clip-aa', 
+    //'--disable-gl-drawing-for-tests', 
+    // '--no-first-run',
+    // '--no-zygote', 
+    '--disable-dev-shm-usage', 
+    // '--use-gl=swiftshader', 
+    // '--single-process', // <- this one doesn't works in Windows
+    // '--disable-gpu',
+    // '--enable-webgl',
+    // '--hide-scrollbars',
+    '--mute-audio',
+    // '--disable-infobars',
+    // '--disable-breakpad',
+    '--disable-web-security']
+}
+if (executablePath) {
+    puppeteer_options['executablePath'] = executablePath;
+}
 
 
 const blockedResources = [
@@ -333,30 +359,9 @@ const blockedResources = [
 
 async function run() {
     let start = true
+
     console.log('START ', account, new Date().toLocaleString())
-    const browser = await puppeteer.launch({
-        // executablePath: process.env.CHROME,
-        headless: isHeadlessMode, // default is true
-        args: ['--no-sandbox',
-        '--disable-setuid-sandbox',
-        //'--disable-dev-shm-usage',
-        //'--disable-accelerated-2d-canvas',
-        // '--disable-canvas-aa', 
-        // '--disable-2d-canvas-clip-aa', 
-        //'--disable-gl-drawing-for-tests', 
-        // '--no-first-run',
-        // '--no-zygote', 
-        '--disable-dev-shm-usage', 
-        // '--use-gl=swiftshader', 
-        // '--single-process', // <- this one doesn't works in Windows
-        // '--disable-gpu',
-        // '--enable-webgl',
-        // '--hide-scrollbars',
-        '--mute-audio',
-        // '--disable-infobars',
-        // '--disable-breakpad',
-        '--disable-web-security']
-    });
+    const browser = await puppeteer.launch(puppeteer_options);
     
     //const page = await browser.newPage();
     let [page] = await browser.pages();
