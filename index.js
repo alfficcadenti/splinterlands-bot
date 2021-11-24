@@ -240,10 +240,24 @@ async function startBotPlayMatch(page, browser) {
     const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
     let startFightFail = false;
     if (teamToPlay) {
-        page.click('.btn--create-team')[0];
+        await page.$eval('.btn--create-team', elem => elem.click())
+            .then(()=>console.log('btn--create-team clicked'))
+            .catch(async ()=>{
+                console.log('Create team didnt work, waiting 5 sec and retry');
+                await page.reload();
+                await page.waitForTimeout(5000);
+                await page.$eval('.btn--create-team', elem => elem.click())
+                    .then(()=>console.log('btn--create-team clicked'))
+                    .catch(()=>{
+                        startFightFail = true;
+                        console.log('Create team didnt work. Did the opponent surrender?');
+                    });
+            });
     } else {
         throw new Error('Team Selection error');
     }
+    if (startFightFail) return
+
     await page.waitForTimeout(5000);
     try {
         await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
@@ -271,12 +285,12 @@ async function startBotPlayMatch(page, browser) {
         // start fight
         await page.waitForTimeout(5000);
         await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
-        await page.$eval('.btn-greenhorn', elem => elem.click())
+        await page.$eval('.btn-green', elem => elem.click())
             .then(()=>console.log('btn-green clicked'))
             .catch(async ()=>{
                 console.log('Start Fight didnt work, waiting 5 sec and retry');
                 await page.waitForTimeout(5000);
-                await page.$eval('.btn-greenhorn', elem => elem.click())
+                await page.$eval('.btn-green', elem => elem.click())
                     .then(()=>console.log('btn-green clicked'))
                     .catch(()=>{
                         startFightFail = true;
