@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y wget vim --no-install-recommends \
     && apt-get update && apt-get install -y google-chrome-stable --no-install-recommends \
     && rm -rf /var/lib/apt/lists/* \
     && apt-get -y purge google-chrome-stable \
-    && rm -rf /usr/lib/google-chrome* \
     && wget -O /tmp/google-chrome-stable.deb $CHROME_URL \
     && dpkg -i /tmp/google-chrome-stable.deb \
     && rm -f /tmp/google-chrome-stable.deb
