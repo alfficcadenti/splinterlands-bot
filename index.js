@@ -238,7 +238,7 @@ async function startBotPlayMatch(page, browser) {
     
     //TEAM SELECTION
     const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
-
+    let startFightFail = false;
     if (teamToPlay) {
         page.click('.btn--create-team')[0];
     } else {
@@ -268,14 +268,23 @@ async function startBotPlayMatch(page, browser) {
             await page.waitForTimeout(1000);
         }
 
+        // start fight
         await page.waitForTimeout(5000);
-        try {
-            await page.click('.btn-green')[0]; //start fight
-        } catch {
-            console.log('Start Fight didnt work, waiting 5 sec and retry');
-            await page.waitForTimeout(5000);
-            await page.click('.btn-green')[0]; //start fight
-        }
+        await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
+        await page.$eval('.btn-greenhorn', elem => elem.click())
+            .then(()=>console.log('btn-green clicked'))
+            .catch(async ()=>{
+                console.log('Start Fight didnt work, waiting 5 sec and retry');
+                await page.waitForTimeout(5000);
+                await page.$eval('.btn-greenhorn', elem => elem.click())
+                    .then(()=>console.log('btn-green clicked'))
+                    .catch(()=>{
+                        startFightFail = true;
+                        console.log('Start Fight didnt work. Did the opponent surrender?');
+                    });
+            });
+        if (startFightFail) return
+
         await page.waitForTimeout(5000);
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
