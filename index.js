@@ -185,35 +185,34 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForSelector('.btn--create-team', { timeout: 50000 })
             .then(()=>console.log('start the match'))
             .catch(async (e)=> {
-            console.error('[Error while waiting for battle]');
-            console.error('Refreshing the page and retrying to retrieve a battle');
-            await page.waitForTimeout(5000);
-            await page.reload();
-            await page.waitForTimeout(5000);
-            await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-            .then(button => {console.log('Battle button clicked'); button.click()})
-            .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-            await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                .then(()=>console.log('start the match'))
-                .catch(async ()=>{
-                    console.log('second attempt failed reloading from homepage...');
-                    await page.goto('https://splinterlands.io/');
-                    await page.waitForTimeout(5000);
-                    await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-                        .then(button => button.click())
-                        .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
-                    await page.waitForTimeout(5000);
-                    await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                        .then(()=>console.log('start the match'))
-                        .catch((e)=>{
-                            console.log('third attempt failed');
-                            throw new Error(e);})
-                        })
-        })
+                console.error('[Error while waiting for battle]');
+                console.error('Refreshing the page and retrying to retrieve a battle');
+                await page.waitForTimeout(5000);
+                await page.reload();
+                await page.waitForTimeout(5000);
+                await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+                    .then(button => {console.log('Battle button clicked'); button.click()})
+                    .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
+                await page.waitForSelector('.btn--create-team', { timeout: 50000 })
+                    .then(()=>console.log('start the match'))
+                    .catch(async ()=>{
+                        console.log('second attempt failed reloading from homepage...');
+                        await page.goto('https://splinterlands.io/');
+                        await page.waitForTimeout(5000);
+                        await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+                            .then(button => button.click())
+                            .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
+                        await page.waitForTimeout(5000);
+                        await page.waitForSelector('.btn--create-team', { timeout: 50000 })
+                            .then(()=>console.log('start the match'))
+                            .catch((e)=>{
+                                console.log('third attempt failed');
+                                throw new Error(e);})
+                            })
+            })
     } catch(e) {
         console.error('[Battle cannot start]:', e)
         throw new Error('The Battle cannot start');
-
     }
     await page.waitForTimeout(10000);
     let [mana, rules, splinters] = await Promise.all([
@@ -254,7 +253,9 @@ async function startBotPlayMatch(page, browser) {
                 console.log(teamToPlay.summoner,'divId not found, reload and try again')
                 page.reload();
                 await page.waitForTimeout(2000);
-                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 }).then(summonerButton => summonerButton.click())
+                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
+                    .then(summonerButton => {summonerButton.click();console.log(teamToPlay.summoner,'clicked')})
+                    .catch(()=>{console.log(teamToPlay.summoner,'not clicked')})
             });
         if (card.color(teamToPlay.cards[0]) === 'Gold') {
             const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
@@ -266,7 +267,8 @@ async function startBotPlayMatch(page, browser) {
         for (i = 1; i <= 6; i++) {
             console.log('play: ', teamToPlay.cards[i].toString())
             await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
-                .then(selector => selector.click()) : console.log('nocard ', i);
+                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
+                .catch(()=>{console.log(teamToPlay.cards[i],'not clicked')}) : console.log('nocard ', i);
             await page.waitForTimeout(1000);
         }
 
