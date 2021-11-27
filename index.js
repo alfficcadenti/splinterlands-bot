@@ -281,7 +281,9 @@ async function startBotPlayMatch(page, browser) {
                 console.log(teamToPlay.summoner,'divId not found, reload and try again')
                 page.reload();
                 await page.waitForTimeout(2000);
-                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 }).then(summonerButton => summonerButton.click())
+                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
+                    .then(summonerButton => {summonerButton.click();console.log(teamToPlay.summoner,'clicked')})
+                    .catch(()=>{console.log(teamToPlay.summoner,'not clicked')})
             });
         if (card.color(teamToPlay.cards[0]) === 'Gold') {
             const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
@@ -293,7 +295,8 @@ async function startBotPlayMatch(page, browser) {
         for (i = 1; i <= 6; i++) {
             console.log('play: ', teamToPlay.cards[i].toString())
             await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
-                .then(selector => selector.click()) : console.log('nocard ', i);
+                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
+                .catch(()=>{console.log(teamToPlay.cards[i],'not clicked')}) : console.log('nocard ', i);
             await page.waitForTimeout(1000);
         }
 

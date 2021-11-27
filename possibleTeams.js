@@ -158,6 +158,9 @@ const askFormation = function (matchDetails) {
 const possibleTeams = async (matchDetails, acc) => {
     let possibleTeams = [];
     while (matchDetails.mana > 10) {
+        if (matchDetails.mana === 98) {
+            matchDetails.mana = 45;
+        }
         console.log('check battles based on mana: '+matchDetails.mana);
         account = acc;
         possibleTeams = await askFormation(matchDetails);
