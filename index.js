@@ -49,6 +49,61 @@ async function checkEcr(page) {
     }
 }
 
+async function launchBattle(page) {
+    const maxRetries = 3;
+    let retries = 1;
+    let isStartBattleSuccess = false;
+    let findOpponentDialogStatus = 0;
+    /*  findOpponentDialogStatus value list
+        0: modal #find_opponent_dialog has not appeared
+        1: modal #find_opponent_dialog has appeared and not closed
+        2: modal #find_opponent_dialog has appeared and closed
+    */
+    let btnCreateTeamTimeout = 50000;
+    while (retries <= maxRetries) {
+        console.log(`waiting for battle button...iter-${retries}`)
+        isStartBattleSuccess = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+            .then(button => { button.click(); console.log('Battle button clicked'); return true })
+            .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
+        if (!isStartBattleSuccess) { await page.reload(); await sleep(5000); retries++; continue }
+
+        if (findOpponentDialogStatus === 0) {
+            console.log('waiting for modal #find_opponent_dialog')
+            findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 10000, visible: true })
+                .then(()=> { console.log('find_opponent_dialog visible'); return 1; })
+                .catch((e)=> { console.log(e.message); return 0; });
+            if (findOpponentDialogStatus === 1) {
+                console.log('waiting for an opponent...');
+                findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
+                    .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
+                    .catch((e)=> { console.log(e.message); return 1; });
+            }
+        }
+            
+        if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
+            if (findOpponentDialogStatus === 2) {
+                console.log('opponent found?');
+                btnCreateTeamTimeout = 5000;
+            }
+            isStartBattleSuccess = await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+                .then(()=> { console.log('start the match'); return true; })
+                .catch(async ()=> {
+                    if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
+                    console.error('btn--create-team not detected');
+                    console.error('Refreshing the page and retrying to retrieve a battle');
+                    await page.reload();
+                    await sleep(5000);
+                    return false;
+                });
+        }
+
+        if (isStartBattleSuccess) break
+        retries++;
+    }
+
+    return isStartBattleSuccess
+}
+
 async function startBotPlayMatch(page, browser) {
     
     console.log( new Date().toLocaleString(), 'opening browser...')
@@ -175,57 +230,8 @@ async function startBotPlayMatch(page, browser) {
 
     // LAUNCH the battle
     // TO DO: check if modal Enemy Found is visible
-    const maxRetries = 3;
-    let retries = 1;
-    let startBattleFail = false;
-    let findOpponentDialogStatus = 0;
-    /*  findOpponentDialogStatus value list
-        0: modal #find_opponent_dialog has not appeared
-        1: modal #find_opponent_dialog has appeared and not closed
-        2: modal #find_opponent_dialog has appeared and closed
-    */
-    let btnCreateTeamTimeout = 50000;
-    while (retries <= maxRetries) {
-        console.log(`waiting for battle button...iter-${retries}`)
-        startBattleFail = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-            .then(button => { button.click(); console.log('Battle button clicked'); return false })
-            .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return true; });
-        if (startBattleFail) { await page.reload(); await sleep(5000); retries++; continue }
-
-        if (findOpponentDialogStatus === 0) {
-            console.log('waiting for modal #find_opponent_dialog')
-            findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 5000, visible: true })
-                .then(()=> { console.log('find_opponent_dialog visible'); return 1; })
-                .catch((e)=> { console.log(e.message); return 0; });
-            if (findOpponentDialogStatus === 1) {
-                console.log('waiting for an opponent...');
-                findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
-                    .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
-                    .catch((e)=> { console.log(e.message); return 1; });
-            }
-        }
-            
-        if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
-            if (findOpponentDialogStatus === 2) {
-                console.log('opponent found?');
-                btnCreateTeamTimeout = 5000;
-            }
-            startBattleFail = await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
-                .then(()=> { console.log('start the match'); return false; })
-                .catch(async ()=> {
-                    if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
-                    console.error('btn--create-team not detected');
-                    console.error('Refreshing the page and retrying to retrieve a battle');
-                    await page.reload();
-                    await sleep(5000);
-                    return true;
-                });
-        }
-
-        if (!startBattleFail) break
-        retries++;
-    }
-    if (startBattleFail) throw new Error('The Battle cannot start');
+    
+    if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
     // GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
     await page.waitForTimeout(10000);
