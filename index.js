@@ -174,47 +174,60 @@ async function startBotPlayMatch(page, browser) {
     await page.waitForTimeout(5000);
 
     // LAUNCH the battle
-    try {
-        console.log('waiting for battle button...')
-        await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-            .then(button => {console.log('Battle button clicked'); button.click()})
-            .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-        await page.waitForTimeout(5000);
+    // TO DO: check if modal Enemy Found is visible
+    const maxRetries = 3;
+    let retries = 1;
+    let startBattleFail = false;
+    let findOpponentDialogStatus = 0;
+    /*  findOpponentDialogStatus value list
+        0: modal #find_opponent_dialog has not appeared
+        1: modal #find_opponent_dialog has appeared and not closed
+        2: modal #find_opponent_dialog has appeared and closed
+    */
+    let btnCreateTeamTimeout = 50000;
+    while (retries <= maxRetries) {
+        console.log(`waiting for battle button...iter-${retries}`)
+        startBattleFail = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+            .then(button => { button.click(); console.log('Battle button clicked'); return false })
+            .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return true; });
+        if (startBattleFail) { await page.reload(); await sleep(5000); retries++; continue }
 
-        console.log('waiting for an opponent...')
-        await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-            .then(()=>console.log('start the match'))
-            .catch(async (e)=> {
-            console.error('[Error while waiting for battle]');
-            console.error('Refreshing the page and retrying to retrieve a battle');
-            await page.waitForTimeout(5000);
-            await page.reload();
-            await page.waitForTimeout(5000);
-            await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-            .then(button => {console.log('Battle button clicked'); button.click()})
-            .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-            await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                .then(()=>console.log('start the match'))
-                .catch(async ()=>{
-                    console.log('second attempt failed reloading from homepage...');
-                    await page.goto('https://splinterlands.io/');
-                    await page.waitForTimeout(5000);
-                    await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-                        .then(button => button.click())
-                        .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
-                    await page.waitForTimeout(5000);
-                    await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                        .then(()=>console.log('start the match'))
-                        .catch((e)=>{
-                            console.log('third attempt failed');
-                            throw new Error(e);})
-                        })
-        })
-    } catch(e) {
-        console.error('[Battle cannot start]:', e)
-        throw new Error('The Battle cannot start');
+        if (findOpponentDialogStatus === 0) {
+            console.log('waiting for modal #find_opponent_dialog')
+            findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 5000, visible: true })
+                .then(()=> { console.log('find_opponent_dialog visible'); return 1; })
+                .catch((e)=> { console.log(e.message); return 0; });
+            if (findOpponentDialogStatus === 1) {
+                console.log('waiting for an opponent...');
+                findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
+                    .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
+                    .catch((e)=> { console.log(e.message); return 1; });
+            }
+        }
+            
+        if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
+            if (findOpponentDialogStatus === 2) {
+                console.log('opponent found?');
+                btnCreateTeamTimeout = 5000;
+            }
+            startBattleFail = await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+                .then(()=> { console.log('start the match'); return false; })
+                .catch(async ()=> {
+                    if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
+                    console.error('btn--create-team not detected');
+                    console.error('Refreshing the page and retrying to retrieve a battle');
+                    await page.reload();
+                    await sleep(5000);
+                    return true;
+                });
+        }
 
+        if (!startBattleFail) break
+        retries++;
     }
+    if (startBattleFail) throw new Error('The Battle cannot start');
+
+    // GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
     await page.waitForTimeout(10000);
     let [mana, rules, splinters] = await Promise.all([
         splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
