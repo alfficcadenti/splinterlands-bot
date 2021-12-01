@@ -72,7 +72,7 @@ async function findSeekingEnemyModal(page, visibleTimeout=5000) {
     return findOpponentDialogStatus
 }
 
-async function findCreateTeamButton(page, findOpponentDialogStatus, btnCreateTeamTimeout=5000) {
+async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
     console.log(`waiting for create team button`);
     return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
         .then(()=> { console.log('start the match'); return true; })
@@ -120,6 +120,74 @@ async function launchBattle(page) {
     }
 
     return isStartBattleSuccess
+}
+
+async function clickSummonerCard(page, teamToPlay) {
+    let clicked = true;
+
+    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
+        .then(summonerButton => summonerButton.click())
+        .catch(async ()=>{
+            clicked = false;
+            console.log(teamToPlay.summoner, 'Summoner card not found');
+        });
+    
+    if (!clicked) console.log(chalk.bold.red('Summoner card not clicked.'))
+
+    return clicked
+}
+
+async function clickMembersCard(page, teamToPlay) {
+    let clicked = true;
+
+    for (i = 1; i <= 6; i++) {
+        console.log('play: ', teamToPlay.cards[i].toString());
+        if (teamToPlay.cards[i]) {
+            await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
+                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
+                .catch(()=>{
+                    clicked = false;
+                    console.log(chalk.bold.red(teamToPlay.cards[i], 'not clicked'));
+                });
+            if (!clicked) break
+        } else {
+            console.log('nocard ', i);
+        }
+        await page.waitForTimeout(1000);
+    }
+
+    return clicked
+}
+
+async function clickCreateTeamButton(page) {
+    let clicked = true;
+
+    await page.reload();
+    await page.waitForTimeout(5000);
+    await page.waitForSelector('.btn--create-team', { timeout: 10000 })
+        .then(e=>e.click())
+        .catch(()=>{
+            clicked = false;
+            console.log('Create team didnt work. Did the opponent surrender?');
+        });
+
+    return clicked
+}
+
+async function clickCards(page, teamToPlay, matchDetails) {
+    if (!await clickSummonerCard(page, teamToPlay)) return false
+
+    if (card.color(teamToPlay.cards[0]) === 'Gold') {
+        const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
+        console.log('Dragon play TEAMCOLOR', playTeamColor)
+        await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
+            .then(selector => selector.click())
+    }
+    await page.waitForTimeout(5000);
+
+    if (!await clickMembersCard(page, teamToPlay)) return false
+
+    return true
 }
 
 async function startBotPlayMatch(page, browser) {
@@ -290,37 +358,15 @@ async function startBotPlayMatch(page, browser) {
                         console.log('Create team didnt work. Did the opponent surrender?');
                     });
             });
+        if (startFightFail) return
     } else {
         throw new Error('Team Selection error');
     }
-    if (startFightFail) return
 
     await page.waitForTimeout(5000);
     try {
-        await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
-            .then(summonerButton => summonerButton.click())
-            .catch(async ()=>{
-                console.log(teamToPlay.summoner,'divId not found, reload and try again')
-                page.reload();
-                await page.waitForTimeout(2000);
-                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
-                    .then(summonerButton => {summonerButton.click();console.log(teamToPlay.summoner,'clicked')})
-                    .catch(()=>{console.log(teamToPlay.summoner,'not clicked')})
-            });
-        if (card.color(teamToPlay.cards[0]) === 'Gold') {
-            const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
-            console.log('Dragon play TEAMCOLOR', playTeamColor)
-            await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
-                .then(selector => selector.click())
-        }
-        await page.waitForTimeout(5000);
-        for (i = 1; i <= 6; i++) {
-            console.log('play: ', teamToPlay.cards[i].toString())
-            await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
-                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
-                .catch(()=>{console.log(teamToPlay.cards[i],'not clicked')}) : console.log('nocard ', i);
-            await page.waitForTimeout(1000);
-        }
+        // Click cards based on teamToPlay value.
+        if (!await clickCards(page, teamToPlay, matchDetails)) return
 
         // start fight
         await page.waitForTimeout(5000);
