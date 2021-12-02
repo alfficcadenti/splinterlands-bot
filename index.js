@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
-const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep } = require('./helper');
+const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep, reload } = require('./helper');
 const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
@@ -85,19 +85,19 @@ async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateT
 
 async function launchBattle(page) {
     const maxRetries = 3;
-    let retries = 1;
+    let retriesNum = 1;
     let btnCreateTeamTimeout = 50000;
     let findOpponentDialogStatus = await findSeekingEnemyModal(page);
     let isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus);
 
-    while (!isStartBattleSuccess && retries <= maxRetries) {
-        console.log(`Launch battle iter-[${retries}]`)
+    while (!isStartBattleSuccess && retriesNum <= maxRetries) {
+        console.log(`Launch battle iter-[${retriesNum}]`)
         if (findOpponentDialogStatus === 0) {
             console.log('waiting for battle button')
             isStartBattleSuccess = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
                 .then(button => { button.click(); console.log('Battle button clicked'); return true })
                 .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
-            if (!isStartBattleSuccess) { await page.reload(); await sleep(5000); retries++; continue }
+            if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
         
             findOpponentDialogStatus = await findSeekingEnemyModal(page);
         }
@@ -112,11 +112,11 @@ async function launchBattle(page) {
 
         if (!isStartBattleSuccess) {
             console.error('Refreshing the page and retrying to retrieve a battle');
-            await page.reload();
+            await reload(page);
             await sleep(5000);
         }
 
-        retries++;
+        retriesNum++;
     }
 
     return isStartBattleSuccess
@@ -126,13 +126,11 @@ async function clickSummonerCard(page, teamToPlay) {
     let clicked = true;
 
     await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
-        .then(summonerButton => summonerButton.click())
-        .catch(async ()=>{
+        .then(card => { card.click(); console.log(chalk.bold.greenBright(teamToPlay.summoner, 'clicked')); })
+        .catch(()=>{
             clicked = false;
-            console.log(teamToPlay.summoner, 'Summoner card not found');
+            console.log(chalk.bold.redBright('Summoner not clicked.'))
         });
-    
-    if (!clicked) console.log(chalk.bold.red('Summoner card not clicked.'))
 
     return clicked
 }
@@ -144,10 +142,10 @@ async function clickMembersCard(page, teamToPlay) {
         console.log('play: ', teamToPlay.cards[i].toString());
         if (teamToPlay.cards[i]) {
             await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
-                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
-                .catch(()=>{
+                .then(card => { card.click();console.log(chalk.bold.greenBright(teamToPlay.cards[i], 'clicked')) })
+                .catch(()=> {
                     clicked = false;
-                    console.log(chalk.bold.red(teamToPlay.cards[i], 'not clicked'));
+                    console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
                 });
             if (!clicked) break
         } else {
@@ -162,10 +160,10 @@ async function clickMembersCard(page, teamToPlay) {
 async function clickCreateTeamButton(page) {
     let clicked = true;
 
-    await page.reload();
+    await reload(page);
     await page.waitForTimeout(5000);
     await page.waitForSelector('.btn--create-team', { timeout: 10000 })
-        .then(e=>e.click())
+        .then(e=> { e.click(); console.log('btn--create-team clicked'); })
         .catch(()=>{
             clicked = false;
             console.log('Create team didnt work. Did the opponent surrender?');
@@ -175,19 +173,38 @@ async function clickCreateTeamButton(page) {
 }
 
 async function clickCards(page, teamToPlay, matchDetails) {
-    if (!await clickSummonerCard(page, teamToPlay)) return false
+    const maxRetries = 3;
+    let retriesNum = 1;
+    let allCardsClicked = false;
 
-    if (card.color(teamToPlay.cards[0]) === 'Gold') {
-        const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
-        console.log('Dragon play TEAMCOLOR', playTeamColor)
-        await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
-            .then(selector => selector.click())
+    while (!allCardsClicked && retriesNum <= maxRetries) {
+        console.log(`Click cards iter-[${retriesNum}]`);
+        if (retriesNum > 1 && !await clickCreateTeamButton(page)) {
+            retriesNum++;
+            continue
+        }
+
+        if (!await clickSummonerCard(page, teamToPlay)) {
+            retriesNum++;
+            continue
+        }
+    
+        if (card.color(teamToPlay.cards[0]) === 'Gold') {
+            const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
+            console.log('Dragon play TEAMCOLOR', playTeamColor)
+            await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
+                .then(selector => selector.click())
+        }
+        await page.waitForTimeout(5000);
+    
+        if (!await clickMembersCard(page, teamToPlay)) {
+            retriesNum++;
+            continue
+        }
+        allCardsClicked = true;   
     }
-    await page.waitForTimeout(5000);
 
-    if (!await clickMembersCard(page, teamToPlay)) return false
-
-    return true
+    return allCardsClicked
 }
 
 async function startBotPlayMatch(page, browser) {
