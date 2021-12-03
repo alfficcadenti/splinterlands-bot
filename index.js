@@ -135,6 +135,21 @@ async function clickSummonerCard(page, teamToPlay) {
     return clicked
 }
 
+async function clickFilterElement(page, teamToPlay, matchDetails) {
+    let clicked = true;    
+    const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
+
+    console.log('Dragon play TEAMCOLOR', playTeamColor)
+    await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
+        .then(selector => { selector.click(); console.log(chalk.bold.greenBright('filter element clicked')) })
+        .catch(()=> {
+            clicked = false;
+            console.log(chalk.bold.redBright('filter element not clicked'))
+        })
+
+    return clicked
+}
+
 async function clickMembersCard(page, teamToPlay) {
     let clicked = true;
 
@@ -189,11 +204,9 @@ async function clickCards(page, teamToPlay, matchDetails) {
             continue
         }
     
-        if (card.color(teamToPlay.cards[0]) === 'Gold') {
-            const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
-            console.log('Dragon play TEAMCOLOR', playTeamColor)
-            await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
-                .then(selector => selector.click())
+        if (card.color(teamToPlay.cards[0]) === 'Gold' && !await clickFilterElement(page, teamToPlay, matchDetails)) {
+            retriesNum++;
+            continue
         }
         await page.waitForTimeout(5000);
     
