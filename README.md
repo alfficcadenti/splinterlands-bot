@@ -28,6 +28,14 @@ and then
 
 `npm start`
 
+If you face issue related to the browser when you run the bot for the first time, be sure you have installed chromium browser. For Linux:
+#### install chromium
+sudo apt-get install chromium-browser
+
+#### run this if running chromium still fails
+sudo apt-get install libpangocairo-1.0-0 libx11-xcb1 libxcomposite1 libxcursor1 libxdamage1 libxi6 libxtst6 libnss3 libcups2 libxss1 libxrandr2 libgconf2-4 libasound2 libatk1.0-0 libgtk-3-0 libgbm-dev
+
+
 
 ### Optional variables:
 
@@ -83,6 +91,21 @@ You can now run `pm2 list` command to see your bot up and running. It will autom
 
 You can find more information on PM2 usage options at their [official webiste](https://pm2.keymetrics.io/).
 
+
+### Running the bot in a docker container
+
+docker instructions:
+
+1. first, you need to install docker https://docs.docker.com/get-docker/
+2. open your terminal/command line
+3. cd into your bot directory
+4. build the image
+-> `docker build -t your_image_name -f Dockerfile .`
+5. then run a container based on the image
+-> `docker run -it your_image_name bash`
+6. the 5th step will get you inside your container, use nano or vim to edit your .env file and make sure to uncomment CHROME_EXEC
+7. finally, run
+-> `npm start`
 
 
 
