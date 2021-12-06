@@ -220,6 +220,41 @@ async function clickCards(page, teamToPlay, matchDetails) {
     return allCardsClicked
 }
 
+async function checkBattleResults(page) {
+    let isBattleResultVisible = false;
+
+    console.log('check div.battle-results modal visibility');
+    isBattleResultVisible = await page.waitForSelector('div.battle-results', { timeout: 5000, visible: true })
+        .then(()=> { console.log('battle results visible'); return true; })
+        .catch(()=> { console.log('battle results not visible'); return false; });
+
+    if (!isBattleResultVisible) return
+
+    try {
+        const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+        if (winner.trim() == account) {
+            const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+            console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+            totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
+            winTotal += 1;
+        }
+        else {
+            console.log(chalk.red('You lost'));
+            loseTotal += 1;
+        }
+    } catch {
+        console.log('Could not find winner - draw?');
+        undefinedTotal += 1;
+    }
+    await clickOnElement(page, '.btn--done', 20000, 10000);
+    await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+
+    console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+    console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+
+    return true
+}
+
 async function startBotPlayMatch(page, browser) {
     
     console.log( new Date().toLocaleString(), 'opening browser...')
@@ -416,34 +451,16 @@ async function startBotPlayMatch(page, browser) {
         if (startFightFail) return
 
         await page.waitForTimeout(5000);
+        if (await checkBattleResults(page)) return
+
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
         await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
         await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
         await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
         await page.waitForTimeout(5000);
-        try {
-			const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
-			if (winner.trim() == account) {
-				const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
-				console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-                totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
-                winTotal += 1;
-			}
-			else {
-                console.log(chalk.red('You lost'));
-                loseTotal += 1;
-			}
-		} catch {
-			console.log('Could not find winner - draw?');
-            undefinedTotal += 1;
-		}
-		await clickOnElement(page, '.btn--done', 20000, 10000);
-		await clickOnElement(page, '#menu_item_battle', 20000, 10000);
-
-        console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
-        console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
         
+        await checkBattleResults(page);
     } catch (e) {
         throw new Error(e);
     }
