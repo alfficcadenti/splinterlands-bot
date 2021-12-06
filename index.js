@@ -4,7 +4,7 @@ const puppeteer = require('puppeteer');
 const splinterlandsPage = require('./splinterlandsPage');
 const user = require('./user');
 const card = require('./cards');
-const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep } = require('./helper');
+const { clickOnElement, getElementText, getElementTextByXpath, teamActualSplinterToPlay, sleep, reload } = require('./helper');
 const quests = require('./quests');
 const ask = require('./possibleTeams');
 const chalk = require('chalk');
@@ -47,6 +47,177 @@ async function checkEcr(page) {
     } catch (e) {
         console.log(chalk.bold.redBright.bgBlack('ECR not defined'));
     }
+}
+
+async function findSeekingEnemyModal(page, visibleTimeout=5000) {
+    let findOpponentDialogStatus = 0;
+    /*  findOpponentDialogStatus value list
+        0: modal #find_opponent_dialog has not appeared
+        1: modal #find_opponent_dialog has appeared and not closed
+        2: modal #find_opponent_dialog has appeared and closed
+    */
+    
+    console.log('check #find_opponent_dialog modal visibility');
+    findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: visibleTimeout, visible: true })
+        .then(()=> { console.log('find_opponent_dialog visible'); return 1; })
+        .catch((e)=> { console.log(e.message); return 0; });
+
+    if (findOpponentDialogStatus === 1) {
+        console.log('waiting for an opponent...');
+        findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
+            .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
+            .catch((e)=> { console.log(e.message); return 1; });
+    }
+
+    return findOpponentDialogStatus
+}
+
+async function findCreateTeamButton(page, findOpponentDialogStatus=0, btnCreateTeamTimeout=5000) {
+    console.log(`waiting for create team button`);
+    return await page.waitForSelector('.btn--create-team', { timeout: btnCreateTeamTimeout })
+        .then(()=> { console.log('start the match'); return true; })
+        .catch(async ()=> {
+            if (findOpponentDialogStatus === 2) console.error('Is this account timed out from battle?');
+            console.error('btn--create-team not detected');
+            return false;
+        });
+}
+
+async function launchBattle(page) {
+    const maxRetries = 3;
+    let retriesNum = 1;
+    let btnCreateTeamTimeout = 50000;
+    let findOpponentDialogStatus = await findSeekingEnemyModal(page);
+    let isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus);
+
+    while (!isStartBattleSuccess && retriesNum <= maxRetries) {
+        console.log(`Launch battle iter-[${retriesNum}]`)
+        if (findOpponentDialogStatus === 0) {
+            console.log('waiting for battle button')
+            isStartBattleSuccess = await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
+                .then(button => { button.click(); console.log('Battle button clicked'); return true })
+                .catch(()=> { console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'); return false; });
+            if (!isStartBattleSuccess) { await reload(page); await sleep(5000); retriesNum++; continue }
+        
+            findOpponentDialogStatus = await findSeekingEnemyModal(page);
+        }
+
+        if (findOpponentDialogStatus === 1 || findOpponentDialogStatus === 2) {
+            if (findOpponentDialogStatus === 2) {
+                console.log('opponent found?');
+                btnCreateTeamTimeout = 5000;
+            }
+            isStartBattleSuccess = await findCreateTeamButton(page, findOpponentDialogStatus, btnCreateTeamTimeout);
+        }
+
+        if (!isStartBattleSuccess) {
+            console.error('Refreshing the page and retrying to retrieve a battle');
+            await reload(page);
+            await sleep(5000);
+        }
+
+        retriesNum++;
+    }
+
+    return isStartBattleSuccess
+}
+
+async function clickSummonerCard(page, teamToPlay) {
+    let clicked = true;
+
+    await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
+        .then(card => { card.click(); console.log(chalk.bold.greenBright(teamToPlay.summoner, 'clicked')); })
+        .catch(()=>{
+            clicked = false;
+            console.log(chalk.bold.redBright('Summoner not clicked.'))
+        });
+
+    return clicked
+}
+
+async function clickFilterElement(page, teamToPlay, matchDetails) {
+    let clicked = true;    
+    const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
+
+    console.log('Dragon play TEAMCOLOR', playTeamColor)
+    await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
+        .then(selector => { selector.click(); console.log(chalk.bold.greenBright('filter element clicked')) })
+        .catch(()=> {
+            clicked = false;
+            console.log(chalk.bold.redBright('filter element not clicked'))
+        })
+
+    return clicked
+}
+
+async function clickMembersCard(page, teamToPlay) {
+    let clicked = true;
+
+    for (i = 1; i <= 6; i++) {
+        console.log('play: ', teamToPlay.cards[i].toString());
+        if (teamToPlay.cards[i]) {
+            await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
+                .then(card => { card.click();console.log(chalk.bold.greenBright(teamToPlay.cards[i], 'clicked')) })
+                .catch(()=> {
+                    clicked = false;
+                    console.log(chalk.bold.redBright(teamToPlay.cards[i], 'not clicked'));
+                });
+            if (!clicked) break
+        } else {
+            console.log('nocard ', i);
+        }
+        await page.waitForTimeout(1000);
+    }
+
+    return clicked
+}
+
+async function clickCreateTeamButton(page) {
+    let clicked = true;
+
+    await reload(page);
+    await page.waitForTimeout(5000);
+    await page.waitForSelector('.btn--create-team', { timeout: 10000 })
+        .then(e=> { e.click(); console.log('btn--create-team clicked'); })
+        .catch(()=>{
+            clicked = false;
+            console.log('Create team didnt work. Did the opponent surrender?');
+        });
+
+    return clicked
+}
+
+async function clickCards(page, teamToPlay, matchDetails) {
+    const maxRetries = 3;
+    let retriesNum = 1;
+    let allCardsClicked = false;
+
+    while (!allCardsClicked && retriesNum <= maxRetries) {
+        console.log(`Click cards iter-[${retriesNum}]`);
+        if (retriesNum > 1 && !await clickCreateTeamButton(page)) {
+            retriesNum++;
+            continue
+        }
+
+        if (!await clickSummonerCard(page, teamToPlay)) {
+            retriesNum++;
+            continue
+        }
+    
+        if (card.color(teamToPlay.cards[0]) === 'Gold' && !await clickFilterElement(page, teamToPlay, matchDetails)) {
+            retriesNum++;
+            continue
+        }
+        await page.waitForTimeout(5000);
+    
+        if (!await clickMembersCard(page, teamToPlay)) {
+            retriesNum++;
+            continue
+        }
+        allCardsClicked = true;   
+    }
+
+    return allCardsClicked
 }
 
 async function startBotPlayMatch(page, browser) {
@@ -173,47 +344,10 @@ async function startBotPlayMatch(page, browser) {
 
     await page.waitForTimeout(5000);
 
-    // LAUNCH the battle
-    try {
-        console.log('waiting for battle button...')
-        await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-            .then(button => {console.log('Battle button clicked'); button.click()})
-            .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-        await page.waitForTimeout(5000);
+    // LAUNCH the battle    
+    if (!await launchBattle(page)) throw new Error('The Battle cannot start');
 
-        console.log('waiting for an opponent...')
-        await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-            .then(()=>console.log('start the match'))
-            .catch(async (e)=> {
-                console.error('[Error while waiting for battle]');
-                console.error('Refreshing the page and retrying to retrieve a battle');
-                await page.waitForTimeout(5000);
-                await page.reload();
-                await page.waitForTimeout(5000);
-                await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-                    .then(button => {console.log('Battle button clicked'); button.click()})
-                    .catch(e=>console.error('[ERROR] waiting for Battle button. is Splinterlands in maintenance?'));
-                await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                    .then(()=>console.log('start the match'))
-                    .catch(async ()=>{
-                        console.log('second attempt failed reloading from homepage...');
-                        await page.goto('https://splinterlands.io/');
-                        await page.waitForTimeout(5000);
-                        await page.waitForXPath("//button[contains(., 'BATTLE')]", { timeout: 20000 })
-                            .then(button => button.click())
-                            .catch(e=>console.error('[ERROR] waiting for Battle button second time'));
-                        await page.waitForTimeout(5000);
-                        await page.waitForSelector('.btn--create-team', { timeout: 50000 })
-                            .then(()=>console.log('start the match'))
-                            .catch((e)=>{
-                                console.log('third attempt failed');
-                                throw new Error(e);})
-                            })
-            })
-    } catch(e) {
-        console.error('[Battle cannot start]:', e)
-        throw new Error('The Battle cannot start');
-    }
+    // GET MANA, RULES, SPLINTERS, AND POSSIBLE TEAM
     await page.waitForTimeout(10000);
     let [mana, rules, splinters] = await Promise.all([
         splinterlandsPage.checkMatchMana(page).then((mana) => mana).catch(() => 'no mana'),
@@ -239,47 +373,48 @@ async function startBotPlayMatch(page, browser) {
     
     //TEAM SELECTION
     const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
-
+    let startFightFail = false;
     if (teamToPlay) {
-        page.click('.btn--create-team')[0];
+        await page.$eval('.btn--create-team', elem => elem.click())
+            .then(()=>console.log('btn--create-team clicked'))
+            .catch(async ()=>{
+                console.log('Create team didnt work, waiting 5 sec and retry');
+                await page.reload();
+                await page.waitForTimeout(5000);
+                await page.$eval('.btn--create-team', elem => elem.click())
+                    .then(()=>console.log('btn--create-team clicked'))
+                    .catch(()=>{
+                        startFightFail = true;
+                        console.log('Create team didnt work. Did the opponent surrender?');
+                    });
+            });
+        if (startFightFail) return
     } else {
         throw new Error('Team Selection error');
     }
+
     await page.waitForTimeout(5000);
     try {
-        await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
-            .then(summonerButton => summonerButton.click())
-            .catch(async ()=>{
-                console.log(teamToPlay.summoner,'divId not found, reload and try again')
-                page.reload();
-                await page.waitForTimeout(2000);
-                page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
-                    .then(summonerButton => {summonerButton.click();console.log(teamToPlay.summoner,'clicked')})
-                    .catch(()=>{console.log(teamToPlay.summoner,'not clicked')})
-            });
-        if (card.color(teamToPlay.cards[0]) === 'Gold') {
-            const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
-            console.log('Dragon play TEAMCOLOR', playTeamColor)
-            await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
-                .then(selector => selector.click())
-        }
-        await page.waitForTimeout(5000);
-        for (i = 1; i <= 6; i++) {
-            console.log('play: ', teamToPlay.cards[i].toString())
-            await teamToPlay.cards[i] ? page.waitForXPath(`//div[@card_detail_id="${teamToPlay.cards[i].toString()}"]`, { timeout: 10000 })
-                .then(selector => {selector.click();console.log(teamToPlay.cards[i],'clicked')})
-                .catch(()=>{console.log(teamToPlay.cards[i],'not clicked')}) : console.log('nocard ', i);
-            await page.waitForTimeout(1000);
-        }
+        // Click cards based on teamToPlay value.
+        if (!await clickCards(page, teamToPlay, matchDetails)) return
 
+        // start fight
         await page.waitForTimeout(5000);
-        try {
-            await page.click('.btn-green')[0]; //start fight
-        } catch {
-            console.log('Start Fight didnt work, waiting 5 sec and retry');
-            await page.waitForTimeout(5000);
-            await page.click('.btn-green')[0]; //start fight
-        }
+        await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
+        await page.$eval('.btn-green', elem => elem.click())
+            .then(()=>console.log('btn-green clicked'))
+            .catch(async ()=>{
+                console.log('Start Fight didnt work, waiting 5 sec and retry');
+                await page.waitForTimeout(5000);
+                await page.$eval('.btn-green', elem => elem.click())
+                    .then(()=>console.log('btn-green clicked'))
+                    .catch(()=>{
+                        startFightFail = true;
+                        console.log('Start Fight didnt work. Did the opponent surrender?');
+                    });
+            });
+        if (startFightFail) return
+
         await page.waitForTimeout(5000);
         await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
         await page.waitForTimeout(5000);
@@ -320,6 +455,32 @@ async function startBotPlayMatch(page, browser) {
 const sleepingTimeInMinutes = process.env.MINUTES_BATTLES_INTERVAL || 30;
 const sleepingTime = sleepingTimeInMinutes * 60000;
 const isHeadlessMode = process.env.HEADLESS === 'false' ? false : true; 
+const executablePath = process.env.CHROME_EXEC || null;
+let puppeteer_options = {
+    headless: isHeadlessMode, // default is true
+    args: ['--no-sandbox',
+    '--disable-setuid-sandbox',
+    //'--disable-dev-shm-usage',
+    //'--disable-accelerated-2d-canvas',
+    // '--disable-canvas-aa', 
+    // '--disable-2d-canvas-clip-aa', 
+    //'--disable-gl-drawing-for-tests', 
+    // '--no-first-run',
+    // '--no-zygote', 
+    '--disable-dev-shm-usage', 
+    // '--use-gl=swiftshader', 
+    // '--single-process', // <- this one doesn't works in Windows
+    // '--disable-gpu',
+    // '--enable-webgl',
+    // '--hide-scrollbars',
+    '--mute-audio',
+    // '--disable-infobars',
+    // '--disable-breakpad',
+    '--disable-web-security']
+}
+if (executablePath) {
+    puppeteer_options['executablePath'] = executablePath;
+}
 
 
 const blockedResources = [
@@ -335,29 +496,9 @@ const blockedResources = [
 
 async function run() {
     let start = true
+
     console.log('START ', account, new Date().toLocaleString())
-    const browser = await puppeteer.launch({
-        headless: isHeadlessMode, // default is true
-        args: ['--no-sandbox',
-        '--disable-setuid-sandbox',
-        //'--disable-dev-shm-usage',
-        //'--disable-accelerated-2d-canvas',
-        // '--disable-canvas-aa', 
-        // '--disable-2d-canvas-clip-aa', 
-        //'--disable-gl-drawing-for-tests', 
-        // '--no-first-run',
-        // '--no-zygote', 
-        '--disable-dev-shm-usage', 
-        // '--use-gl=swiftshader', 
-        // '--single-process', // <- this one doesn't works in Windows
-        // '--disable-gpu',
-        // '--enable-webgl',
-        // '--hide-scrollbars',
-        '--mute-audio',
-        // '--disable-infobars',
-        // '--disable-breakpad',
-        '--disable-web-security']
-    });
+    const browser = await puppeteer.launch(puppeteer_options);
     
     //const page = await browser.newPage();
     let [page] = await browser.pages();
