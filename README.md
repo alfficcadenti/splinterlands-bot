@@ -28,6 +28,9 @@ and then
 
 `npm start`
 
+There is also a youtube video made by a user that can help windows users with the setup [here](https://youtu.be/MFxV6XeDKec)
+
+
 If you face issue related to the browser when you run the bot for the first time, be sure you have installed chromium browser. For Linux:
 #### install chromium
 sudo apt-get install chromium-browser
