@@ -18,6 +18,8 @@ const colorToDeck = { 'Red': 'Fire', 'Blue': 'Water', 'White': 'Life', 'Black': 
 
 const deckValidColor = (accumulator, currentValue) => validDecks.includes(card.color(currentValue)) ? colorToDeck[card.color(currentValue)] : accumulator;
 
+const reload = async (page) => { console.log('reloading page...') ; await page.reload(); }
+
 const sleep = (ms) => {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);
@@ -63,3 +65,4 @@ module.exports.clickOnElement = clickOnElement;
 module.exports.getElementText = getElementText;
 module.exports.getElementTextByXpath = getElementTextByXpath;
 module.exports.sleep = sleep;
+module.exports.reload = reload;
