@@ -66,7 +66,11 @@ async function findSeekingEnemyModal(page, visibleTimeout=5000) {
         console.log('waiting for an opponent...');
         findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
             .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
-            .catch((e)=> { console.log(e.message); return 1; });
+            .catch(async (e)=> {
+                console.log(e.message);
+                await reload(page); // reload the page, in case the page is not responding
+                return 1;
+            });
     }
 
     return findOpponentDialogStatus
@@ -220,7 +224,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
     return allCardsClicked
 }
 
-async function checkBattleResults(page) {
+async function findBattleResultsModal(page) {
     let isBattleResultVisible = false;
 
     console.log('check div.battle-results modal visibility');
@@ -253,6 +257,41 @@ async function checkBattleResults(page) {
     console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
 
     return true
+}
+
+async function commenceBattle(page) {
+    let waitForOpponentDialogStatus = 0;
+    /*  waitForOpponentDialogStatus value list
+        0: modal #wait_for_opponent_dialog has not appeared
+        1: modal #wait_for_opponent_dialog has appeared and not closed
+        2: modal #wait_for_opponent_dialog has appeared and closed
+    */
+    let btnRumbleTimeout = 20000;
+
+    console.log('check #wait_for_opponent_dialog modal visibility');
+    waitForOpponentDialogStatus = await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 10000, visible: true })
+        .then(()=> { console.log('wait_for_opponent_dialog visible'); return 1; })
+        .catch(()=> { console.log('wait_for_opponent_dialog not visible'); return 0; });
+
+    if (waitForOpponentDialogStatus === 1) {
+        waitForOpponentDialogStatus = await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 100000, hidden: true })
+            .then(()=> { console.log('wait_for_opponent_dialog has closed'); btnRumbleTimeout = 5000; return 2; })
+            .catch((e)=> { console.log(e.message); return 1; });
+    }
+    if (waitForOpponentDialogStatus === 0 || waitForOpponentDialogStatus === 1) {
+        await reload(page);
+        if (await findBattleResultsModal(page)) return
+    }
+
+    await page.waitForTimeout(5000);
+    await page.waitForSelector('#btnRumble', { timeout: btnRumbleTimeout }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
+    await page.waitForTimeout(5000);
+    await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
+    await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
+    await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
+    await page.waitForTimeout(5000);
+
+    await findBattleResultsModal(page);
 }
 
 async function startBotPlayMatch(page, browser) {
@@ -423,7 +462,11 @@ async function startBotPlayMatch(page, browser) {
                         console.log('Create team didnt work. Did the opponent surrender?');
                     });
             });
-        if (startFightFail) return
+        if (startFightFail) {
+            await reload(page);
+            await findBattleResultsModal(page);
+            return
+        }
     } else {
         throw new Error('Team Selection error');
     }
@@ -448,19 +491,9 @@ async function startBotPlayMatch(page, browser) {
                         console.log('Start Fight didnt work. Did the opponent surrender?');
                     });
             });
-        if (startFightFail) return
 
-        await page.waitForTimeout(5000);
-        if (await checkBattleResults(page)) return
-
-        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
-        await page.waitForTimeout(5000);
-        await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
-        await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
-        await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
-        await page.waitForTimeout(5000);
-        
-        await checkBattleResults(page);
+        if (!startFightFail) await commenceBattle(page);
+        else await findBattleResultsModal(page);
     } catch (e) {
         throw new Error(e);
     }
