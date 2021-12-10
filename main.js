@@ -55,7 +55,12 @@ async function startMulti() {
         console.log(chalk.bold.whiteBright.bgGreen(`Running bot iter-[${count}]`))
         for (let i = 0; i < accounts.length; i++) {
             setupAccount(accounts[i], passwords[i], isMultiAccountMode);
-            await run();            
+            try {
+                await run();
+            } catch (e) {
+                console.log('Error on main:', e)
+            }
+                    
             console.log(`Finished running ${accounts[i]} account...\n`);
         }
         await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
