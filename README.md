@@ -80,7 +80,7 @@ To run your bot as a daemon (background process) you can use NPM package PM2. PM
 
 To start a bot, do all the preparation steps from the above, but instead of `npm start`, run this:
 
-`pm2 start index.js`
+`pm2 start main.js`
 
 You can now run `pm2 list` command to see your bot up and running. It will automatically start on system startup now. You can control the bot with these commands:
 
