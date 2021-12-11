@@ -199,14 +199,9 @@ async function clickCards(page, teamToPlay, matchDetails) {
         if (retriesNum > 1) {
             await reload(page);
             await page.waitForTimeout(5000);
-            if (!await clickCreateTeamButton(page)) {
-                // if click create team button fails, check battle results in case the opponent surrendered
-                if (await findBattleResultsModal(page)) {
-                    break
-                } else {
-                    retriesNum++;
-                    continue
-                }
+            if (retriesNum > 1 && !await clickCreateTeamButton(page)) {
+                retriesNum++;
+                continue
             }
         }
 
