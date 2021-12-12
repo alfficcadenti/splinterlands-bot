@@ -44,7 +44,7 @@ async function openSplinter() {
         deviceScaleFactor: 1,
       });
 
-    await page.goto('https://splinterlands.io/?p=battle_history');
+    await page.goto('https://splinterlands.com/?p=battle_history');
     await page.waitForTimeout(2000);
     await login(page)
     await page.waitForTimeout(2000);

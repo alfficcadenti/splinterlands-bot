@@ -231,7 +231,7 @@ async function startBotPlayMatch(page, browser) {
             deviceScaleFactor: 1,
         });
 
-        await page.goto('https://splinterlands.io/');
+        await page.goto('https://splinterlands.com/');
         await page.waitForTimeout(8000);
 
         let item = await page.waitForSelector('#log_in_button > button', {
@@ -248,7 +248,7 @@ async function startBotPlayMatch(page, browser) {
             });
         }
 
-        await page.goto('https://splinterlands.io/?p=battle_history');
+        await page.goto('https://splinterlands.com/?p=battle_history');
         await page.waitForTimeout(8000);
         await closePopups(page);
         await closePopups(page);
@@ -522,7 +522,7 @@ async function run() {
         const errorMessage = err.toString();
         console.log('browser page error: ', errorMessage)
     });
-    page.goto('https://splinterlands.io/');
+    page.goto('https://splinterlands.com/');
     page.recoverStatus = 0;
     page.favouriteDeck = process.env.FAVOURITE_DECK || '';
     while (start) {
