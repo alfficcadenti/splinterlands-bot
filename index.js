@@ -49,7 +49,7 @@ async function checkEcr(page) {
     }
 }
 
-async function findSeekingEnemyModal(page, visibleTimeout=5000) {
+async function findSeekingEnemyModal(page, visibleTimeout=10000) {
     let findOpponentDialogStatus = 0;
     /*  findOpponentDialogStatus value list
         0: modal #find_opponent_dialog has not appeared
@@ -128,7 +128,7 @@ async function launchBattle(page) {
 
 async function clickSummonerCard(page, teamToPlay) {
     let clicked = true;
-
+    await sleep(3000)
     await page.waitForXPath(`//div[@card_detail_id="${teamToPlay.summoner}"]`, { timeout: 10000 })
         .then(card => { card.click(); console.log(chalk.bold.greenBright(teamToPlay.summoner, 'clicked')); })
         .catch(()=>{
@@ -140,9 +140,9 @@ async function clickSummonerCard(page, teamToPlay) {
 }
 
 async function clickFilterElement(page, teamToPlay, matchDetails) {
-    let clicked = true;    
+    let clicked = true;
     const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
-
+    await sleep(2000)
     console.log('Dragon play TEAMCOLOR', playTeamColor)
     await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
         .then(selector => { selector.click(); console.log(chalk.bold.greenBright('filter element clicked')) })
@@ -190,7 +190,7 @@ async function clickCreateTeamButton(page) {
 }
 
 async function clickCards(page, teamToPlay, matchDetails) {
-    const maxRetries = 3;
+    const maxRetries = 6;
     let retriesNum = 1;
     let allCardsClicked = false;
 
@@ -199,7 +199,7 @@ async function clickCards(page, teamToPlay, matchDetails) {
         if (retriesNum > 1) {
             await reload(page);
             await page.waitForTimeout(5000);
-            if (retriesNum > 1 && !await clickCreateTeamButton(page)) {
+            if (!await clickCreateTeamButton(page)) {
                 retriesNum++;
                 continue
             }
@@ -466,7 +466,7 @@ async function startBotPlayMatch(page, browser) {
                 return
             }
         } else {
-            throw new Error('Team Selection error');
+            throw new Error('Team Selection error: no possible team to play');
         }
 
         await page.waitForTimeout(5000);

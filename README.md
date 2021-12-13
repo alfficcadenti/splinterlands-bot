@@ -71,6 +71,13 @@ Example:
 
 - `SKIP_QUEST=life,snipe,neutral`
 
+### Running bot with multiaccount setting
+
+in order to run multple accounts launching the script only once, you can simply add the list of usernames and posting keys in the .env file and set the variable `MULTI_ACCOUNT` as true:
+
+- `MULTI_ACCOUNT=true`
+- `ACCOUNT=user1,user2,user,...`
+- `PASSWORD=postingkey1,postingkey2,postingkey3,...`
 
 ### Running bot as a daemon with PM2
 
@@ -80,7 +87,7 @@ To run your bot as a daemon (background process) you can use NPM package PM2. PM
 
 To start a bot, do all the preparation steps from the above, but instead of `npm start`, run this:
 
-`pm2 start index.js`
+`pm2 start main.js`
 
 You can now run `pm2 list` command to see your bot up and running. It will automatically start on system startup now. You can control the bot with these commands:
 
