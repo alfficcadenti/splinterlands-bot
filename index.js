@@ -144,12 +144,18 @@ async function clickFilterElement(page, teamToPlay, matchDetails) {
     const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
     await sleep(2000)
     console.log('Dragon play TEAMCOLOR', playTeamColor)
+    await page.waitForSelector('#splinter_selection_modal', { visible: true, timeout: 10000 })
+        .then(()=> console.log('filter element visible'))
+        .catch(()=> console.log('filter element not visible'));
+
     await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
         .then(selector => { selector.click(); console.log(chalk.bold.greenBright('filter element clicked')) })
-        .catch(()=> {
-            clicked = false;
-            console.log(chalk.bold.redBright('filter element not clicked'))
-        })
+        .catch(()=> { console.log(chalk.bold.redBright('filter element not clicked')); clicked = false; })
+    if (!clicked) return clicked
+
+    await page.waitForSelector('#splinter_selection_modal', { hidden: true, timeout: 10000 })
+        .then(()=> console.log('filter element closed'))
+        .catch(()=> { console.log('filter element not closed'); });
 
     return clicked
 }
