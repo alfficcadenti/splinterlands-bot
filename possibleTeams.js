@@ -248,7 +248,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
             } else {
                 console.log('quest already completed or not enough teams for the quest (V2)')
             }
-        } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][8]) {
+        } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
             // QUEST FOR V1
             console.log('play quest for V1')
             if(left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3 && splinters.includes(quest.splinter)) {
@@ -275,10 +275,10 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
                 return { summoner: favDeckfilteredTeams[0][0], cards: favDeckfilteredTeams[0] };
             }
             console.log('No possible teams for splinter ',favouriteDeck, ' V2')
-        } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][8]) {
+        } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
             // FAV DECK FOR V1
             console.log('play splinter:', favouriteDeck, 'from ', favDeckfilteredTeams?.length, 'teams from V1')
-            if(favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1 && favDeckfilteredTeams[0][8]) {
+            if(favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1 && favDeckfilteredTeams[0][0]) {
 
 
                 const res = await mostWinningSummonerTankCombo(favDeckfilteredTeams, matchDetails);
@@ -303,7 +303,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
             console.log('NO available team to be played for V2');
             return null;
         }
-    } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][8]) {
+    } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
         //V1 Strategy
         //find best combination (most used)
         const res = await mostWinningSummonerTankCombo(availableTeamsToPlay, matchDetails);
