@@ -275,7 +275,7 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
                 return { summoner: favDeckfilteredTeams[0][0], cards: favDeckfilteredTeams[0] };
             }
             console.log('No possible teams for splinter ',favouriteDeck, ' V2')
-        } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
+        } else if (process.env.API_VERSION!=2 && favDeckfilteredTeams[0][0]) {
             // FAV DECK FOR V1
             console.log('play splinter:', favouriteDeck, 'from ', favDeckfilteredTeams?.length, 'teams from V1')
             if(favDeckfilteredTeams && favDeckfilteredTeams?.length >= 1 && favDeckfilteredTeams[0][0]) {
