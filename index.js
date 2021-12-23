@@ -66,7 +66,11 @@ async function findSeekingEnemyModal(page, visibleTimeout=10000) {
         console.log('waiting for an opponent...');
         findOpponentDialogStatus = await page.waitForSelector('#find_opponent_dialog', { timeout: 50000, hidden: true })
             .then(()=> { console.log('find_opponent_dialog has closed'); return 2; })
-            .catch((e)=> { console.log(e.message); return 1; });
+            .catch(async (e)=> {
+                console.log(e.message);
+                await reload(page); // reload the page, in case the page is not responding
+                return 1;
+            });
     }
 
     return findOpponentDialogStatus
@@ -140,12 +144,18 @@ async function clickFilterElement(page, teamToPlay, matchDetails) {
     const playTeamColor = teamActualSplinterToPlay(teamToPlay.cards.slice(0, 6)) || matchDetails.splinters[0]
     await sleep(2000)
     console.log('Dragon play TEAMCOLOR', playTeamColor)
+    await page.waitForSelector('#splinter_selection_modal', { visible: true, timeout: 10000 })
+        .then(()=> console.log('filter element visible'))
+        .catch(()=> console.log('filter element not visible'));
+
     await page.waitForXPath(`//div[@data-original-title="${playTeamColor}"]`, { timeout: 8000 })
         .then(selector => { selector.click(); console.log(chalk.bold.greenBright('filter element clicked')) })
-        .catch(()=> {
-            clicked = false;
-            console.log(chalk.bold.redBright('filter element not clicked'))
-        })
+        .catch(()=> { console.log(chalk.bold.redBright('filter element not clicked')); clicked = false; })
+    if (!clicked) return clicked
+
+    await page.waitForSelector('#splinter_selection_modal', { hidden: true, timeout: 10000 })
+        .then(()=> console.log('filter element closed'))
+        .catch(()=> { console.log('filter element not closed'); });
 
     return clicked
 }
@@ -175,8 +185,6 @@ async function clickMembersCard(page, teamToPlay) {
 async function clickCreateTeamButton(page) {
     let clicked = true;
 
-    await reload(page);
-    await page.waitForTimeout(5000);
     await page.waitForSelector('.btn--create-team', { timeout: 10000 })
         .then(e=> { e.click(); console.log('btn--create-team clicked'); })
         .catch(()=>{
@@ -194,9 +202,13 @@ async function clickCards(page, teamToPlay, matchDetails) {
 
     while (!allCardsClicked && retriesNum <= maxRetries) {
         console.log(`Click cards iter-[${retriesNum}]`);
-        if (retriesNum > 1 && !await clickCreateTeamButton(page)) {
-            retriesNum++;
-            continue
+        if (retriesNum > 1) {
+            await reload(page);
+            await page.waitForTimeout(5000);
+            if (!await clickCreateTeamButton(page)) {
+                retriesNum++;
+                continue
+            }
         }
 
         if (!await clickSummonerCard(page, teamToPlay)) {
@@ -218,6 +230,77 @@ async function clickCards(page, teamToPlay, matchDetails) {
     }
 
     return allCardsClicked
+}
+
+async function findBattleResultsModal(page) {
+    let isBattleResultVisible = false;
+
+    console.log('check div.battle-results modal visibility');
+    isBattleResultVisible = await page.waitForSelector('div.battle-results', { timeout: 5000, visible: true })
+        .then(()=> { console.log('battle results visible'); return true; })
+        .catch(()=> { console.log('battle results not visible'); return false; });
+
+    if (!isBattleResultVisible) return
+
+    try {
+        const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+        if (winner.trim() == account) {
+            const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+            console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
+            totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
+            winTotal += 1;
+        }
+        else {
+            console.log(chalk.red('You lost'));
+            loseTotal += 1;
+        }
+    } catch {
+        console.log('Could not find winner - draw?');
+        undefinedTotal += 1;
+    }
+    await clickOnElement(page, '.btn--done', 20000, 10000);
+    await clickOnElement(page, '#menu_item_battle', 20000, 10000);
+
+    console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
+    console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+
+    return true
+}
+
+async function commenceBattle(page) {
+    let waitForOpponentDialogStatus = 0;
+    /*  waitForOpponentDialogStatus value list
+        0: modal #wait_for_opponent_dialog has not appeared
+        1: modal #wait_for_opponent_dialog has appeared and not closed
+    */
+    let btnRumbleTimeout = 20000;
+
+    console.log('check #wait_for_opponent_dialog modal visibility');
+    waitForOpponentDialogStatus = await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 10000, visible: true })
+        .then(()=> { console.log('wait_for_opponent_dialog visible'); return 1; })
+        .catch(()=> { console.log('wait_for_opponent_dialog not visible'); return 0; });
+
+    if (waitForOpponentDialogStatus === 1) {
+        await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 100000, hidden: true })
+            .then(()=> { console.log('wait_for_opponent_dialog has closed'); btnRumbleTimeout = 5000; })
+            .catch((e)=> console.log(e.message));
+    }
+
+    await page.waitForTimeout(5000);
+    const isBtnRumbleVisible = await page.waitForSelector('#btnRumble', { timeout: btnRumbleTimeout })
+        .then(()=> { console.log('btnRumble visible'); return true; })
+        .catch(()=> { console.log('btnRumble not visible'); return false; });
+    // if btnRumble not visible, check battle results modal in case the opponent surrendered
+    if (!isBtnRumbleVisible && await findBattleResultsModal(page)) return
+    else if (!isBtnRumbleVisible) return
+    
+    await page.waitForTimeout(5000);
+    await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
+    await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
+    await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
+    await page.waitForTimeout(5000);
+
+    await findBattleResultsModal(page);
 }
 
 async function startBotPlayMatch(page, browser) {
@@ -368,22 +451,26 @@ async function startBotPlayMatch(page, browser) {
         
         //TEAM SELECTION
         const teamToPlay = await ask.teamSelection(possibleTeams, matchDetails, quest, page.favouriteDeck);
-        let startFightFail = false;
+        let startFight = false;
         if (teamToPlay) {
-            await page.$eval('.btn--create-team', elem => elem.click())
-                .then(()=>console.log('btn--create-team clicked'))
-                .catch(async ()=>{
+            startFight = await clickCreateTeamButton(page);
+            if (!startFight) {
+                // if click create team button fails, check battle results in case the opponent surrendered
+                if (await findBattleResultsModal(page)) {
+                    return
+                } else {
                     console.log('Create team didnt work, waiting 5 sec and retry');
                     await page.reload();
                     await page.waitForTimeout(5000);
-                    await page.$eval('.btn--create-team', elem => elem.click())
-                        .then(()=>console.log('btn--create-team clicked'))
-                        .catch(()=>{
-                            startFightFail = true;
-                            console.log('Create team didnt work. Did the opponent surrender?');
-                        });
-                });
-            if (startFightFail) return
+                    startFight = await clickCreateTeamButton(page);
+                }
+            }
+
+            if (!startFight) {
+                // if click create team button fails, check battle results in case the opponent surrendered
+                await findBattleResultsModal(page);
+                return
+            }
         } else {
             throw new Error('Team Selection error: no possible team to play');
         }
@@ -391,8 +478,9 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForTimeout(5000);
     
         // Click cards based on teamToPlay value.
-        if (!await clickCards(page, teamToPlay, matchDetails)) return
-        
+        startFight = await clickCards(page, teamToPlay, matchDetails);
+        if (!startFight) return
+
         // start fight
         await page.waitForTimeout(5000);
         await page.waitForSelector('.btn-green', { timeout: 1000 }).then(()=>console.log('btn-green visible')).catch(()=>console.log('btn-green not visible'));
@@ -404,41 +492,13 @@ async function startBotPlayMatch(page, browser) {
                 await page.$eval('.btn-green', elem => elem.click())
                     .then(()=>console.log('btn-green clicked'))
                     .catch(()=>{
-                        startFightFail = true;
+                        startFight = false;
                         console.log('Start Fight didnt work. Did the opponent surrender?');
                     });
             });
-        if (startFightFail) return
 
-        await page.waitForTimeout(5000);
-        await page.waitForSelector('#btnRumble', { timeout: 90000 }).then(()=>console.log('btnRumble visible')).catch(()=>console.log('btnRumble not visible'));
-        await page.waitForTimeout(5000);
-        await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
-        await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
-        await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
-        await page.waitForTimeout(5000);
-            try {
-                const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
-                if (winner.trim() == account) {
-                    const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
-                    console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-                    totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
-                    winTotal += 1;
-                }
-                else {
-                    console.log(chalk.red('You lost'));
-                    loseTotal += 1;
-                }
-            } catch {
-                console.log('Could not find winner - draw?');
-                undefinedTotal += 1;
-            }
-            await clickOnElement(page, '.btn--done', 20000, 10000);
-            await clickOnElement(page, '#menu_item_battle', 20000, 10000);
-
-            console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
-            console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
-            
+        if (startFight) await commenceBattle(page);
+        else await findBattleResultsModal(page);
     } catch (e) {
             console.log('Error handling browser not opened, internet connection issues, or battle cannot start:', e)
     }

@@ -63,7 +63,7 @@ async function startMulti() {
                     
             console.log(`Finished running ${accounts[i]} account...\n`);
         }
-        await console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
+        console.log('waiting for the next battle in', sleepingTime / 1000 / 60 , 'minutes at', new Date(Date.now() + sleepingTime).toLocaleString(), '\n');
         await sleep(sleepingTime);
         count++;
     }
