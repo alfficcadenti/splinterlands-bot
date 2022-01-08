@@ -226,23 +226,31 @@ const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [], matchDetai
     return filteredTeamsForAvailableSplinters || teams;
 }
 
+const filterPreferredCardsTeams = (teams = [], preferredCards = []) => teams.filter(team => team.slice(0,6).some(card => preferredCards.includes(card)))
+
 const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) => {
     let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
     console.log('quest custom option set as:', priorityToTheQuest)
     const availableTeamsToPlay = await filterOutUnplayableDragonsAnfUnplayableSplinters(possibleTeams ,matchDetails);
+    let filterPreferredTeams = [];
+    if(process.env.DELEGATED_CARDS_PRIORITY === 'true') filterPreferredTeams = await filterPreferredCardsTeams(availableTeamsToPlay,matchDetails?.preferredCards)
 
     //CHECK FOR QUEST:
     if(priorityToTheQuest && availableTeamsToPlay.length > 10 && quest && quest.total) {
         const left = quest.total - quest.completed;
         const questCheck = matchDetails.splinters.includes(quest.splinter) && left > 0;
         const filteredTeamsForQuest = availableTeamsToPlay.filter(team=>team[7]===quest.splinter)
+        const filteredTeamsPreferredCardsForQuest = filterPreferredTeams.filter(team=>team[7]===quest.splinter)
         console.log(left + ' battles left for the '+quest.splinter+' quest')
         console.log('play for the quest ',quest.splinter,'? ',questCheck)
 
         //QUEST FOR V2
         if (process.env.API_VERSION == 2 && availableTeamsToPlay[0][8]) {
             console.log('V2 try to play for the quest?')
-            if(left > 0 && filteredTeamsForQuest?.length >= 1 && questCheck && filteredTeamsForQuest[0][8]) {
+            if(left > 0 && filteredTeamsPreferredCardsForQuest?.length >= 1 && questCheck && filteredTeamsPreferredCardsForQuest[0][8]) {
+                console.log('PLAY for the quest with Teams choice of size (V2): ',filteredTeamsPreferredCardsForQuest.length, 'PLAY this with preferred cards: ', filteredTeamsPreferredCardsForQuest[0])
+                return { summoner: filteredTeamsPreferredCardsForQuest[0][0], cards: filteredTeamsPreferredCardsForQuest[0] };
+            } else if(left > 0 && filteredTeamsForQuest?.length >= 1 && questCheck && filteredTeamsForQuest[0][8]) {
                 console.log('PLAY for the quest with Teams choice of size (V2): ',filteredTeamsForQuest.length, 'PLAY this: ', filteredTeamsForQuest[0])
                 return { summoner: filteredTeamsForQuest[0][0], cards: filteredTeamsForQuest[0] };
             } else {
@@ -251,7 +259,17 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
         } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
             // QUEST FOR V1
             console.log('play quest for V1')
-            if(left > 0 && filteredTeamsForQuest && filteredTeamsForQuest?.length > 3 && splinters.includes(quest.splinter)) {
+            if(left > 0 && filteredTeamsPreferredCardsForQuest?.length) {
+                console.log('Try to play for the quest with Teams size (V1): ',filteredTeamsPreferredCardsForQuest.length)
+                console.log("TEAMS:", filteredTeamsPreferredCardsForQuest)
+                const res = await mostWinningSummonerTankCombo(filteredTeamsPreferredCardsForQuest, matchDetails);
+                if (res[0] && res[1]) {
+                    console.log('Play this with preferred cards for the quest:', res)
+                    return { summoner: res[0], cards: res[1] };
+                }
+            }
+
+            if(left > 0 && filteredTeamsForQuest?.length > 3 && splinters.includes(quest.splinter)) {
                 console.log('Try to play for the quest with Teams size (V1): ',filteredTeamsForQuest.length)
                 const res = await mostWinningSummonerTankCombo(filteredTeamsForQuest, matchDetails);
                 if (res[0] && res[1]) {
@@ -295,7 +313,11 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
 
     //V2 Strategy ONLY FOR PRIVATE API
     if (process.env.API_VERSION == 2 && availableTeamsToPlay?.[0]?.[8]) {
-        if(availableTeamsToPlay?.length) {
+        if(filterPreferredTeams?.length) {
+            console.log('play the highest winning rate team with preferred cards: ', filterPreferredTeams[0])
+            return { summoner: filterPreferredTeams[0][0], cards: filterPreferredTeams[0] };
+        }
+        else if(availableTeamsToPlay?.length) {
             console.log('play the highest winning rate team: ', availableTeamsToPlay[0])
             return { summoner: availableTeamsToPlay[0][0], cards: availableTeamsToPlay[0] };
         }
@@ -306,6 +328,13 @@ const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) 
     } else if (process.env.API_VERSION!=2 && availableTeamsToPlay[0][0]) {
         //V1 Strategy
         //find best combination (most used)
+        if(filterPreferredTeams?.length) {
+            const res = await mostWinningSummonerTankCombo(filterPreferredTeams, matchDetails);
+            if (res[0] && res[1]) {
+                console.log('Dont play for the quest, and play this with preferred cards:', res)
+                return { summoner: res[0], cards: res[1] };
+            }
+        }
         const res = await mostWinningSummonerTankCombo(availableTeamsToPlay, matchDetails);
         if (res[0] && res[1]) {
             console.log('Dont play for the quest, and play this:', res)

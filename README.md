@@ -50,6 +50,7 @@ By default, the BOT will run as headless. Set `HEADLESS` to false to see your br
 By default, the BOT will run no matter the ECR level. Set `ECR_STOP_LIMIT` to a specific value you want the bot to rest and recover the ECR. The bot will recover until the `ECR_RECOVER_TO` is reached or until 100% ECR.
 If you want the bot to play only one color (when it's possible), use the variable `FAVOURITE_DECK`  and specify the splinter by choosing only one among: fire, life, earth, water, death, dragon. 
 If you want the bot to try to skip specific quest types you can include multiple quest in the variable `SKIP_QUEST` separated by the comma (`SKIP_QUEST=life,snipe,neutral`). whenever it's possible, the bot will click to ask for a new one. Remember you can only ask for a new one once based on the game rules.
+If you want the bot to prioritize teams that uses delegated cards, set the variable `DELEGATED_CARDS_PRIORITY`  equal to `true`.
 
 Example:
 
@@ -70,6 +71,9 @@ Example:
 - `FAVOURITE_DECK=dragon`
 
 - `SKIP_QUEST=life,snipe,neutral`
+
+- `DELEGATED_CARDS_PRIORITY=true`
+
 
 ### Running bot with multiaccount setting
 
