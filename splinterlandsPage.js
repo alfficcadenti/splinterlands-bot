@@ -9,7 +9,7 @@ async function login(page, account, password) {
             .then(() => page.type('#password', password))
 
             // .then(() => page.waitForSelector('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button', { visible: true }).then(() => page.click('#login_dialog_v2 > div > div > div.modal-body > div > div > form > div > div.col-sm-offset-1 > button')))
-            .then(() => page.keyboard.press('Enter'))
+            .then(() => page.click("#loginBtn"))
             .then(() => page.waitForTimeout(5000))
             .then(() => page.reload())
             .then(() => page.waitForTimeout(5000))
