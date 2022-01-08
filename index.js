@@ -425,7 +425,8 @@ async function startBotPlayMatch(page, browser) {
         if (isClaimDailyQuestMode === true) {
             try {
                 await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
-                    .then(button => button.click());
+                    .then(button => button.click())
+                    .then(()=>page.goto('https://splinterlands.com/?p=battle_history'));
             } catch (e) {
                 console.info('no quest reward to be claimed waiting for the battle...')
             }
