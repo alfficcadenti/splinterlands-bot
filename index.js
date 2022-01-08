@@ -24,6 +24,12 @@ async function getCards() {
     return myCards;
 } 
 
+// LOAD RENTED CARDS AS PREFERRED
+async function getPreferredCards() {
+    const myPreferredCards = await user.getRentedCards(account)
+    return myPreferredCards;
+} 
+
 async function getQuest() {
     return quests.getPlayerQuest(account)
         .then(x=>x)
@@ -379,7 +385,11 @@ async function startBotPlayMatch(page, browser) {
     
         console.log('getting user cards collection from splinterlands API...')
         const myCards = await getCards()
-            .then((x)=>{console.log('cards retrieved'); return x})
+            .then((x)=>{console.log('cards retrieved:',x?.length); return x})
+            .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!'));
+            
+        const myPreferredCards = await getPreferredCards()
+            .then((x)=>{console.log('delegated cards size:', x?.length, x); return x})
             .catch(()=>console.log('cards collection api didnt respond. Did you use username? avoid email!')); 
     
         if(myCards) {
@@ -415,7 +425,8 @@ async function startBotPlayMatch(page, browser) {
         if (isClaimDailyQuestMode === true) {
             try {
                 await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
-                    .then(button => button.click());
+                    .then(button => button.click())
+                    .then(()=>page.goto('https://splinterlands.com/?p=battle_history'));
             } catch (e) {
                 console.info('no quest reward to be claimed waiting for the battle...')
             }
@@ -437,7 +448,8 @@ async function startBotPlayMatch(page, browser) {
             mana: mana,
             rules: rules,
             splinters: splinters,
-            myCards: myCards
+            myCards: myCards,
+            preferredCards: myPreferredCards
         }
         await page.waitForTimeout(2000);
         const possibleTeams = await ask.possibleTeams(matchDetails, account).catch(e=>console.log('Error from possible team API call: ',e));
