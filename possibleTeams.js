@@ -221,7 +221,7 @@ const mostWinningSummonerTankCombo = async (possibleTeams, matchDetails) => {
     }
 }
 
-const filterOutUnplayableDragonsAnfUnplayableSplinters = (teams = [], matchDetails) => {
+const filterOutUnplayableDragonsAndUnplayableSplinters = (teams = [], matchDetails) => {
     const filteredTeamsForAvailableSplinters = Array.isArray(teams) && teams.filter(team=>(team[7]!=='dragon' && matchDetails.splinters.includes(team[7])) || (team[7]==='dragon' && matchDetails.splinters.includes(helper.teamActualSplinterToPlay(team?.slice(0, 6)).toLowerCase())))
     return filteredTeamsForAvailableSplinters || teams;
 }
@@ -231,7 +231,7 @@ const filterPreferredCardsTeams = (teams = [], preferredCards = []) => teams.fil
 const teamSelection = async (possibleTeams, matchDetails, quest, favouriteDeck) => {
     let priorityToTheQuest = process.env.QUEST_PRIORITY === 'false' ? false : true;
     console.log('quest custom option set as:', priorityToTheQuest)
-    const availableTeamsToPlay = await filterOutUnplayableDragonsAnfUnplayableSplinters(possibleTeams ,matchDetails);
+    const availableTeamsToPlay = await filterOutUnplayableDragonsAndUnplayableSplinters(possibleTeams ,matchDetails);
     let filterPreferredTeams = [];
     if(process.env.DELEGATED_CARDS_PRIORITY === 'true') filterPreferredTeams = await filterPreferredCardsTeams(availableTeamsToPlay,matchDetails?.preferredCards)
 
