@@ -80,24 +80,35 @@ let availabilityCheck = (base, toCheck) => toCheck.slice(0, 7).every(v => base.i
 let account = '';
 
 const getBattlesWithRuleset = (ruleset, mana, summoners) => {
-    const rulesetEncoded = encodeURIComponent(ruleset);
-    const host = process.env.API || 'http://95.179.236.23/'
-    let url = ''
-    if (process.env.API_VERSION == 2) {
-        url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
-    } else {
-        url = `V1/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+    try {
+        const rulesetEncoded = encodeURIComponent(ruleset);
+        const host = process.env.API || 'http://95.179.236.23/'
+        let url = ''
+        if (process.env.API_VERSION == 2) {
+            url = `V2/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        } else {
+            url = `V1/battlesruleset?ruleset=${rulesetEncoded}&mana=${mana}&player=${account}&token=${process.env.TOKEN}&summoners=${summoners ? JSON.stringify(summoners) : ''}`;
+        }
+        console.log('API call: ', host+url)
+        return fetch(host+url, { timeout: 10000 })
+            .then(x => x && x.json())
+            .then(data => data)
+            .catch((e) => console.log('fetch ', e))
+
+    } catch (e) {
+        console.log('Error API did not return')
     }
-    console.log('API call: ', host+url)
-    return fetch(host+url)
-        .then(x => x && x.json())
-        .then(data => data)
-        .catch((e) => console.log('fetch ', e))
+
 }
 
 const battlesFilterByManacap = async (mana, ruleset, summoners) => {
-    const history = await getBattlesWithRuleset(ruleset, mana, summoners);
-    if (history) {
+    let forceLocalHistory = process.env.FORCE_LOCAL_HISTORY === 'false' ? false : true;
+    let history = [];
+    if(!forceLocalHistory) {
+        history = await getBattlesWithRuleset(ruleset, mana, summoners);
+    }
+    
+    if (history && history?.length) {
         console.log('API battles returned ', history.length)
         return history.filter(
             battle =>
