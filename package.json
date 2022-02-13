@@ -1,6 +1,6 @@
 {
   "name": "splinterlands-bot",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "",
   "main": "main.js",
   "engines": {
@@ -18,7 +18,7 @@
     "dotenv": "^8.2.0",
     "hierarchical-clustering": "^1.1.0",
     "minimist": ">=1.2.3",
-    "node-fetch": "^3.1.1",
+    "node-fetch": "^2.6.1",
     "pg": "^8.0.3",
     "puppeteer": "^10.1.0"
   }

@@ -426,6 +426,10 @@ async function startBotPlayMatch(page, browser) {
             try {
                 await page.waitForSelector('#quest_claim_btn', { timeout: 5000 })
                     .then(button => button.click())
+                    .then(async a=>{
+                        await page.waitForTimeout(15000);
+                        await page.reload();
+                        console.log('Quest claimed')})
                     .then(()=>page.goto('https://splinterlands.com/?p=battle_history'));
             } catch (e) {
                 console.info('no quest reward to be claimed waiting for the battle...')
@@ -484,6 +488,7 @@ async function startBotPlayMatch(page, browser) {
                 return
             }
         } else {
+            console.log(teamToPlay)
             throw new Error('Team Selection error: no possible team to play');
         }
 

@@ -51,6 +51,7 @@ By default, the BOT will run no matter the ECR level. Set `ECR_STOP_LIMIT` to a 
 If you want the bot to play only one color (when it's possible), use the variable `FAVOURITE_DECK`  and specify the splinter by choosing only one among: fire, life, earth, water, death, dragon. 
 If you want the bot to try to skip specific quest types you can include multiple quest in the variable `SKIP_QUEST` separated by the comma (`SKIP_QUEST=life,snipe,neutral`). whenever it's possible, the bot will click to ask for a new one. Remember you can only ask for a new one once based on the game rules.
 If you want the bot to prioritize teams that uses delegated cards, set the variable `DELEGATED_CARDS_PRIORITY`  equal to `true`.
+To avoid to sue the API solution and rely only on your local history json file created as per instructions below (Local History backup), you can set the variable `FORCE_LOCAL_HISTORY=true`.
 
 Example:
 
@@ -73,6 +74,8 @@ Example:
 - `SKIP_QUEST=life,snipe,neutral`
 
 - `DELEGATED_CARDS_PRIORITY=true`
+
+- `FORCE_LOCAL_HISTORY=true`
 
 
 ### Running bot with multiaccount setting
@@ -136,14 +139,14 @@ Once the script is done, it will create a file 'history.json' in the data folder
 
 **How to get history data from users of my choice?**
 
-1. Open battlesGetData.js in notepad and change the usersToGrab on line 69 to the users of your choice
+1. Open battlesGetData.js in notepad and change the usersToGrab on line 69 to aa list of users of your choice like: `let usersToGrab = ['player1','player2']`
 2. Run `node battlesGetData.js` in the bot folder
-3. File history.json is created, rename it to newHistory.json to replace the existing history data OR extend the newHistory.json file (see below)
+3. File history.json is created, rename it to newHistory.json to replace the existing history data OR extend the newHistory.json file with `combine.js` (see below)
 
 **How to extend the newHistory.json without deleting existing data?**
 
 1. Backup newHistory.json in case something goes wrong
-2. Inside the data folder, run `node combine.js` in the data folder to add the data from history.json to the newHistory.json file
+2. Run `node combine.js` to add the new data from history.json to the newHistory.json file that will be used by the bot
 
 
 # FAQ
