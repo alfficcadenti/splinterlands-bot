@@ -18,7 +18,7 @@
     "dotenv": "^8.2.0",
     "hierarchical-clustering": "^1.1.0",
     "minimist": ">=1.2.3",
-    "moment": "^2.29.1",
+    "moment": "^2.29.2",
     "node-fetch": "^2.6.7",
     "pg": "^8.0.3",
     "puppeteer": "^10.1.0"
