@@ -47,7 +47,6 @@ async function checkMana(page) {
 
 async function checkMatchMana(page) {
     const mana = await page.$$eval("div.mana-cap__icon", el => el.map(x => x.getAttribute("data-original-title")));
-    console.log('MANA:',mana, mana.length, )
     const manaValue = parseInt(mana[mana.length -1].split(':')[1], 10);
     return manaValue;
 }
