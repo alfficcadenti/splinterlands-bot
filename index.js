@@ -45,9 +45,9 @@ async function closePopups(page) {
 
 async function checkEcr(page) {
     try {
-        const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100);
+        const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100).catch((e)=> { console.log(e.message); return 1; });;
         if(ecr) {
-            console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr.split('.')[0] + "%"));
+            console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr?.split('.')[0] + "%"));
             return parseFloat(ecr)
         }
     } catch (e) {
