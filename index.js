@@ -250,8 +250,9 @@ async function findBattleResultsModal(page) {
 
     try {
         const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
+        console.log('the winner is:',winner)
         if (winner.trim() == account) {
-            const decWon = await getElementText(page, '.player.winner span.dec-reward span', 1000);
+            const decWon = await getElementText(page, 'section.player.winner span.dec-reward span', 1000).catch(()=> { console.log('No Rewards Found'); return 0; });;
             console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
             totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
             winTotal += 1;
@@ -260,8 +261,8 @@ async function findBattleResultsModal(page) {
             console.log(chalk.red('You lost'));
             loseTotal += 1;
         }
-    } catch {
-        console.log('Could not find winner - draw?');
+    } catch (e) {
+        console.log('Could not find winner - draw?', e);
         undefinedTotal += 1;
     }
     await clickOnElement(page, '.btn--done', 20000, 10000);
@@ -279,7 +280,7 @@ async function commenceBattle(page) {
         0: modal #wait_for_opponent_dialog has not appeared
         1: modal #wait_for_opponent_dialog has appeared and not closed
     */
-    let btnRumbleTimeout = 20000;
+    let btnSkipTimeout = 20000;
 
     console.log('check #wait_for_opponent_dialog modal visibility');
     waitForOpponentDialogStatus = await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 10000, visible: true })
@@ -288,21 +289,21 @@ async function commenceBattle(page) {
 
     if (waitForOpponentDialogStatus === 1) {
         await page.waitForSelector('#wait_for_opponent_dialog', { timeout: 100000, hidden: true })
-            .then(()=> { console.log('wait_for_opponent_dialog has closed'); btnRumbleTimeout = 5000; })
+            .then(()=> { console.log('wait_for_opponent_dialog has closed'); btnSkipTimeout = 5000; })
             .catch((e)=> console.log(e.message));
     }
 
     await page.waitForTimeout(5000);
-    const isBtnRumbleVisible = await page.waitForSelector('#btnRumble', { timeout: btnRumbleTimeout })
+    const isBtnSkipVisible = await page.waitForSelector('#btnSkip', { timeout: btnSkipTimeout })
         .then(()=> { console.log('btnRumble visible'); return true; })
         .catch(()=> { console.log('btnRumble not visible'); return false; });
     // if btnRumble not visible, check battle results modal in case the opponent surrendered
-    if (!isBtnRumbleVisible && await findBattleResultsModal(page)) return
-    else if (!isBtnRumbleVisible) return
+    if (!isBtnSkipVisible && await findBattleResultsModal(page)) return
+    else if (!isBtnSkipVisible) return
     
-    await page.waitForTimeout(5000);
-    await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
-    await page.waitForSelector('#btnSkip', { timeout: 10000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
+    //await page.waitForTimeout(5000);
+    //await page.$eval('#btnRumble', elem => elem.click()).then(()=>console.log('btnRumble clicked')).catch(()=>console.log('btnRumble didnt click')); //start rumble
+    await page.waitForSelector('#btnSkip', { timeout: 30000 }).then(()=>console.log('btnSkip visible')).catch(()=>console.log('btnSkip not visible'));
     await page.$eval('#btnSkip', elem => elem.click()).then(()=>console.log('btnSkip clicked')).catch(()=>console.log('btnSkip not visible')); //skip rumble
     await page.waitForTimeout(5000);
 
@@ -321,7 +322,7 @@ async function startBotPlayMatch(page, browser) {
         });
 
         await page.goto('https://splinterlands.com/');
-        await page.waitForTimeout(8000);
+        await page.waitForTimeout(5000);
 
         let item = await page.waitForSelector('#log_in_button > button', {
             visible: true,
@@ -341,6 +342,7 @@ async function startBotPlayMatch(page, browser) {
         await page.waitForTimeout(8000);
         await closePopups(page);
         await closePopups(page);
+        await clickOnElement(page, '#bh_wild_toggle', 1000, 2000);
 
         const ecr = await checkEcr(page);
         if (ecr === undefined) throw new Error('Fail to get ECR.')
@@ -372,7 +374,7 @@ async function startBotPlayMatch(page, browser) {
     
         if(process.env.SKIP_QUEST && quest?.splinter && process.env.SKIP_QUEST.split(',').includes(quest?.splinter) && quest?.total !== quest?.completed) {
             try {
-                await page.click('#quest_new_btn')
+                await page.click('#focus_new_btn')
                     .then(async a=>{
                         await page.reload();
                         console.log('New quest requested')})

@@ -1,14 +1,14 @@
 const fetch = require("node-fetch");
 
 const quests = [
-    {name: "Defend the Borders", element: "life"},
-    {name: "Pirate Attacks", element: "water"},
+    {name: "defend", element: "life"},
+    {name: "pirate", element: "water"},
     {name: "High Priority Targets", element: "snipe"},
-    {name: "Lyanna's Call", element: "earth"},
-    {name: "Stir the Volcano", element: "fire"},
-    {name: "Rising Dead", element: "death"},
+    {name: "lyanna", element: "earth"},
+    {name: "stir", element: "fire"},
+    {name: "rising", element: "death"},
     {name: "Stubborn Mercenaries", element: "neutral"},
-    {name: "Gloridax Revenge", element: "dragon"},
+    {name: "gloridax", element: "dragon"},
     {name: "Stealth Mission", element: "sneak"},
 ]
 
