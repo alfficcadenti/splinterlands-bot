@@ -12,7 +12,7 @@ const chalk = require('chalk');
 let isMultiAccountMode = false;
 let account = '';
 let password = '';
-let totalDec = 0;
+let totalSPS = 0;
 let winTotal = 0;
 let loseTotal = 0;
 let undefinedTotal = 0;
@@ -45,7 +45,7 @@ async function closePopups(page) {
 
 async function checkEcr(page) {
     try {
-        const ecr = await getElementTextByXpath(page, "//div[@class='dec-options'][1]/div[@class='value'][2]/div", 100).catch((e)=> { console.log(e.message); return 1; });;
+        const ecr = await getElementTextByXpath(page, "//div[@class='sps-options'][1]/div[@class='value'][2]/div", 100).catch((e)=> { console.log(e.message); return 1; });;
         if(ecr) {
             console.log(chalk.bold.whiteBright.bgMagenta('Your current Energy Capture Rate is ' + ecr?.split('.')[0] + "%"));
             return parseFloat(ecr)
@@ -252,9 +252,9 @@ async function findBattleResultsModal(page) {
         const winner = await getElementText(page, 'section.player.winner .bio__name__display', 15000);
         console.log('the winner is:',winner)
         if (winner.trim() == account) {
-            const decWon = await getElementText(page, 'section.player.winner span.dec-reward span', 1000).catch(()=> { console.log('No Rewards Found'); return 0; });;
-            console.log(chalk.green('You won! Reward: ' + decWon + ' DEC'));
-            totalDec += !isNaN(parseFloat(decWon)) ? parseFloat(decWon) : 0 ;
+            const spsWon = await getElementText(page, 'section.player.winner span.sps-reward span', 1000).catch(()=> { console.log('No Rewards Found'); return 0; });;
+            console.log(chalk.green('You won! Reward: ' + spsWon + ' SPS'));
+            totalSps += !isNaN(parseFloat(spsWon)) ? parseFloat(spsWon) : 0 ;
             winTotal += 1;
         }
         else {
@@ -269,7 +269,7 @@ async function findBattleResultsModal(page) {
     await clickOnElement(page, '#menu_item_battle', 20000, 10000);
 
     console.log('Total Battles: ' + (winTotal + loseTotal + undefinedTotal) + chalk.green(' - Win Total: ' + winTotal) + chalk.yellow(' - Draw? Total: ' + undefinedTotal) + chalk.red(' - Lost Total: ' + loseTotal));
-    console.log(chalk.green('Total Earned: ' + totalDec + ' DEC'));
+    console.log(chalk.green('Total Earned: ' + totalSps + ' SPS'));
 
     return true
 }
